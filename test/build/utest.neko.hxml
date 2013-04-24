@@ -1,0 +1,7 @@
+-cp ../../src
+-cp ../src
+-neko ../bin/test.n
+-main parser.html.InputStreamTest
+-D neko2
+-D haxe3
+-lib utest

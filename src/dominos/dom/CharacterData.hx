@@ -16,7 +16,7 @@ package dominos.dom;
  * 
  * @author Thomas Fétiveau
  */
-class CharacterData
+class CharacterData extends Node
 {
 	//attribute DOMString       data;
 								// raises(DOMException) on setting

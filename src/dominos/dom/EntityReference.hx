@@ -4,7 +4,7 @@ package dominos.dom;
  * ...
  * @author Thomas Fétiveau
  */
-class CDATASection extends Text
+class EntityReference extends Node
 {
 
 	public function new() 

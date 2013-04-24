@@ -1,14 +1,15 @@
-package dominos.dom;
+package dominos.html;
 
 /**
  * ...
  * @author Thomas Fétiveau
  */
-class CDATASection extends Text
+class HTMLOptGroupElement
 {
 
 	public function new() 
 	{
+		
 		
 	}
 	

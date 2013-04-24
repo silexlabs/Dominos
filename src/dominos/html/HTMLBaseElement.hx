@@ -1,10 +1,10 @@
-package dominos.dom;
+package dominos.html;
 
 /**
  * ...
  * @author Thomas Fétiveau
  */
-class CDATASection extends Text
+class HTMLBaseElement
 {
 
 	public function new() 

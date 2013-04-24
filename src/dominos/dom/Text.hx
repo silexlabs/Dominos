@@ -25,7 +25,7 @@ package dominos.dom;
  * 
  * @author Thomas Fétiveau
  */
-class Text
+class Text extends CharacterData
 {
 	//Text               splitText(in unsigned long offset)
 										//raises(DOMException);

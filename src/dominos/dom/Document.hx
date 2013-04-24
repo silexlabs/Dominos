@@ -20,6 +20,9 @@ class Document
 
 	//readonly attribute DOMImplementation implementation;
 	public var implementation : DOMImplementation;
+	
+	//readonly attribute DOMString compatMode;
+	public var compatMode( default, never ) : DOMString;
 
 	//readonly attribute Element         documentElement;
 	public var documentElement : Element;
