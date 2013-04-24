@@ -314,7 +314,34 @@ class InputStream
 		}
 		return true;
 	}
-	
+	/**
+	 * Consumes until s is found or EOF. Returns consumed chars not including s or EOF.
+	 */
+	public function consumeUntilString( s : String ) : Array<Int>
+	{
+		var buf = new Array();
+
+		while ( currCharI++ < data.length && !StringTools.isEof( data.fastCodeAt( currCharI ) ) )
+		{
+			if ( currCharI + s.length <= data.length && !StringTools.isEof( data.fastCodeAt( currCharI + s.length - 1 ) ) )
+			{
+				for ( i in 0...s.length )
+				{
+					if ( s.fastCodeAt( i ) != data.fastCodeAt( currCharI + i ) )
+					{
+						break;
+					}
+					else if ( i == s.length - 1 )
+					{
+						currCharI += i;
+						return buf;
+					}
+				}
+			}
+			buf.push( data.fastCodeAt( currCharI ) );
+		}
+		return buf;
+	}
 	/**
 	 * 
 	 * @param	c

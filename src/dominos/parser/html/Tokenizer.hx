@@ -1377,7 +1377,7 @@ class Tokenizer
 							//TODO Set the DOCTYPE token's force-quirks flag to on.
 							state = BOGUS_DOCTYPE;
 					}
-				case DOCTYPE_PUBLIC_IDENTIFIER( q : Quotation ): // DOUBLE_QUOTED & SINGLE_QUOTED
+				case DOCTYPE_PUBLIC_IDENTIFIER( q ): // DOUBLE_QUOTED & SINGLE_QUOTED
 					c = is.nextInputChar();
 					
 					switch(c)
@@ -1515,7 +1515,7 @@ class Tokenizer
 							//TODO Set the DOCTYPE token's force-quirks flag to on.
 							state = BOGUS_DOCTYPE;
 					}
-				case DOCTYPE_SYSTEM_IDENTIFIER( q : Quotation ): // DOUBLE_QUOTED & SINGLE_QUOTED
+				case DOCTYPE_SYSTEM_IDENTIFIER( q ): // DOUBLE_QUOTED & SINGLE_QUOTED
 					c = is.nextInputChar();
 					
 					switch(c)
@@ -1575,12 +1575,17 @@ class Tokenizer
 					}
 				case CDATA_SECTION:
 					state = DATA;
-					
-					//TODO Consume every character up to the next occurrence of the three character sequence U+005D RIGHT SQUARE BRACKET U+005D RIGHT SQUARE BRACKET U+003E GREATER-THAN SIGN (]]>), or the end of the file (EOF), whichever comes first. Emit a series of character tokens consisting of all the characters consumed except the matching three character sequence at the end (if one was found before the end of the file).
 
-					//TODO If the end of the file was reached, reconsume the EOF character.
+					for ( ci in is.consumeUntilString("]]>") )
+					{
+						tb.consumeToken( CHAR( ci ) );
+					}
+					if ( is.currentInputChar() == -1 )
+					{
+						//TODO reconsume the EOF character.
+					}
 				case _:
-					throw "ERROR unknown Tokenizer state";
+					throw "ERROR: unknown Tokenizer state";
 			}
 		}
 		

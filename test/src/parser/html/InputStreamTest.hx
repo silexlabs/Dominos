@@ -56,4 +56,27 @@ class InputStreamTest
 		Assert.equals([-2], r);
 	}
 	
+	public function testConsumeUntilString()
+	{
+		var is : InputStream = new InputStream( "blablabla ]]>" );
+		var r = is.consumeUntilString("]]>");
+		Assert.equals([0x62, 0x6C, 0x61, 0x62, 0x6C, 0x61, 0x62, 0x6C, 0x61, 0x20], r);
+		Assert.equals( '>'.code, is.currentInputChar() );
+		
+		var is : InputStream = new InputStream( "blablabla ]]> blablabla" );
+		var r = is.consumeUntilString("]]>");
+		Assert.equals([0x62, 0x6C, 0x61, 0x62, 0x6C, 0x61, 0x62, 0x6C, 0x61, 0x20], r);
+		Assert.equals( '>'.code, is.currentInputChar() );
+		
+		var is : InputStream = new InputStream( "tra" );
+		var r = is.consumeUntilString("]]>");
+		Assert.equals([0x74, 0x72, 0x61], r);
+		Assert.equals( -1, is.currentInputChar() );
+		
+		var is : InputStream = new InputStream( "" );
+		var r = is.consumeUntilString("]]>");
+		Assert.equals([], r);
+		Assert.equals( -1, is.currentInputChar() );
+	}
+	
 }
