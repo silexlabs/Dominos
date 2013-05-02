@@ -24,17 +24,20 @@ class Node
 	// NodeType
 	//const unsigned short
 	static inline var ELEMENT_NODE : Int                   = 1;
-	static inline var ATTRIBUTE_NODE : Int                 = 2;
+	static inline var ATTRIBUTE_NODE : Int                 = 2; // historical
 	static inline var TEXT_NODE : Int                      = 3;
-	static inline var CDATA_SECTION_NODE : Int             = 4;
-	static inline var ENTITY_REFERENCE_NODE : Int          = 5;
-	static inline var ENTITY_NODE : Int                    = 6;
+	static inline var CDATA_SECTION_NODE : Int             = 4; // historical
+	static inline var ENTITY_REFERENCE_NODE : Int          = 5; // historical
+	static inline var ENTITY_NODE : Int                    = 6; // historical
 	static inline var PROCESSING_INSTRUCTION_NODE : Int    = 7;
 	static inline var COMMENT_NODE : Int                   = 8;
 	static inline var DOCUMENT_NODE : Int                  = 9;
 	static inline var DOCUMENT_TYPE_NODE : Int             = 10;
 	static inline var DOCUMENT_FRAGMENT_NODE : Int         = 11;
-	static inline var NOTATION_NODE : Int                  = 12;
+	static inline var NOTATION_NODE : Int                  = 12; // historical
+
+	//readonly attribute unsigned short   nodeType;
+	public var nodeType( default, never ) : Int;
 
 	//readonly attribute DOMString        nodeName;
 	public var nodeName( default, never ) : DOMString;
@@ -42,9 +45,6 @@ class Node
 	public var nodeValue:DOMString;
 							// raises(DOMException) on setting
 							// raises(DOMException) on retrieval
-
-	//readonly attribute unsigned short   nodeType;
-	public var nodeType( default, never ) : Int;
 	
 	//readonly attribute Node             parentNode;
 	public var parentNode( default, never ) : Node;

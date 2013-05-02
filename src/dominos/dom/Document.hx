@@ -12,7 +12,7 @@ package dominos.dom;
  * 
  * @author Thomas Fétiveau
  */
-class Document
+class Document extends Node
 {
 	// Modified in DOM Level 3:
 	//readonly attribute DocumentType    doctype;
@@ -131,4 +131,16 @@ class Document
 								//in DOMString qualifiedName)
 										//raises(DOMException);
 	public function renameNode( n : Node, namespaceURI : DOMString, qualifiedName : DOMString ) : Node { }
+	
+	// NEW
+	//void prepend((Node or DOMString)... nodes);
+	public function prepend( /* TODO */ ):Void
+	{
+		// TODO
+	}
+	//void append((Node or DOMString)... nodes);
+	public function append( /* TODO */ ):Void
+	{
+		// TODO
+	}
 }

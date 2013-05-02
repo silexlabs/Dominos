@@ -6,15 +6,20 @@ package dominos.dom;
  */
 class DocumentType extends Node
 {
-	/*
-	readonly attribute DOMString       name;
-	readonly attribute NamedNodeMap    entities;
-	readonly attribute NamedNodeMap    notations;
-	// Introduced in DOM Level 2:
-	readonly attribute DOMString       publicId;
-	// Introduced in DOM Level 2:
-	readonly attribute DOMString       systemId;
-	// Introduced in DOM Level 2:
-	readonly attribute DOMString       internalSubset;
-	*/
+	//readonly attribute DOMString name;
+	public var name( default, never ) : DOMString;
+	//readonly attribute DOMString publicId;
+	public var publicId( default, never ) : DOMString;
+	//readonly attribute DOMString systemId;
+	public var systemId( default, never ) : DOMString;
+
+	// NEW
+	//void before((Node or DOMString)... nodes);
+	
+	//void after((Node or DOMString)... nodes);
+	
+	//void replace((Node or DOMString)... nodes);
+	
+	//void remove();
+	
 }
