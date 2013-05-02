@@ -30,7 +30,7 @@ enum InsertionMode
 }
 
 /**
- * ...
+ * The TreeBuilder class handles the 
  * @author Thomas Fétiveau
  */
 class TreeBuilder
