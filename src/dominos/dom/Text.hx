@@ -32,15 +32,6 @@ class Text extends CharacterData
 	public function splitText( offset : Int ) : Text { }
 
 	// Introduced in DOM Level 3:
-	//readonly attribute boolean         isElementContentWhitespace;
-	public var isElementContentWhitespace( default, never ) : Bool;
-
-	// Introduced in DOM Level 3:
 	//readonly attribute DOMString       wholeText;
 	public var wholeText( default, never ) : DOMString;
-
-	// Introduced in DOM Level 3:
-	//Text               replaceWholeText(in DOMString content)
-										//raises(DOMException);
-	public function replaceWholeText( content : DOMString ) : Text { }
 }

@@ -244,6 +244,8 @@ class Tokenizer
 	private var is : InputStream;
 	
 	private var tb : TreeBuilder;
+	
+	var state : State;
 
 	public function new( is : InputStream ) 
 	{
@@ -252,9 +254,20 @@ class Tokenizer
 		this.tb = new TreeBuilder();
 	}
 	
+	/**
+	 * 
+	 */
+	public function switchState( s : State ) : Void
+	{
+		state = s;
+	}
+
+	/**
+	 * 
+	 */
 	public function parse()
 	{
-		var state : State = DATA;
+		state = DATA;
 		
 		var c : Int;
 		

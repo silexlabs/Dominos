@@ -10,111 +10,75 @@ package dominos.dom;
  * attribute value. On the other hand, in HTML, where all attributes have simple string values, methods
  * to directly access an attribute value can safely be used as a convenience.
  * 
- * Documentation for this class was provided by <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-745549614">W3C</a>
+ * Documentation for this class was provided by <a href="https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#element">W3C</a>
  * 
  * @author Thomas Fétiveau
  */
 class Element extends Node
 {
-	//readonly attribute DOMString       tagName;
+	//TODO readonly attribute DOMString? namespaceURI;
+	//TODO readonly attribute DOMString? prefix;
+	//TODO readonly attribute DOMString localName;
+	//readonly attribute DOMString tagName;
 	public var tagName( default, never ) : DOMString;
 
-	//DOMString          getAttribute(in DOMString name);
+	//TODO attribute DOMString id;
+	//TODO attribute DOMString className;
+	//TODO readonly attribute DOMTokenList classList;
+
+	/**
+	 * The attributes attribute must return a read only array of the context object's attribute list. 
+	 * TODO The returned read only array must be live. I.e. changes to the associated attributes are reflected.
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-attributes
+	 */
+	//readonly attribute Attr[] attributes;
+	public var attributes( default, never ) : Array<Attr>;
+	
+	//DOMString? getAttribute(DOMString name);
 	public function getAttribute( name : DOMString ) : DOMString { }
 
-	//void               setAttribute(in DOMString name, 
-								  //in DOMString value)
-										//raises(DOMException);
-	public function setAttribute( name : DOMString , value : DOMString ) : Void { }
+	//DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
+	public function getAttributeNS( namespaceURI : DOMString, localName : DOMString ) : DOMString { }
 
-	//void               removeAttribute(in DOMString name)
-										//raises(DOMException);
+	//void setAttribute(DOMString name, DOMString value);
+	public function setAttribute( name : DOMString , value : DOMString ) : Void { }
+	
+	//void setAttributeNS(DOMString? namespace, DOMString name, DOMString value);
+	public function setAttributeNS( namespaceURI : DOMString, qualifiedName : DOMString, value : DOMString ) : Void { }
+
+	//void removeAttribute(DOMString name);
 	public function removeAttribute( name : DOMString ) : Void { }
 
-	//Attr               getAttributeNode(in DOMString name);
-	public function getAttributeNode( name : DOMString ) : Attr { }
-
-	//Attr               setAttributeNode(in Attr newAttr)
-										//raises(DOMException);
-	public function setAttributeNode( newAttr : Attr ) : Attr { }
-
-	//Attr               removeAttributeNode(in Attr oldAttr)
-										//raises(DOMException);
-	public function removeAttributeNode( oldAttr : Attr ) : Attr { }
-
-	//NodeList           getElementsByTagName(in DOMString name);
-	public function getElementsByTagName( name : DOMString ) : NodeList { }
-	
-	
-	// Introduced in DOM Level 2:
-	//DOMString          getAttributeNS(in DOMString namespaceURI, 
-									//in DOMString localName)
-										//raises(DOMException);
-	public function getAttributeNS( namespaceURI : DOMString, localName : DOMString ) : DOMString { }
-										
-										
-	// Introduced in DOM Level 2:
-	//void               setAttributeNS(in DOMString namespaceURI, 
-									//in DOMString qualifiedName, 
-									//in DOMString value)
-										//raises(DOMException);
-	public function setAttributeNS( namespaceURI : DOMString, qualifiedName : DOMString, value : DOMString ) : Void { }
-										
-										
-	// Introduced in DOM Level 2:
-	//void               removeAttributeNS(in DOMString namespaceURI, 
-									   //in DOMString localName)
-										//raises(DOMException);
+	//void removeAttributeNS(DOMString? namespace, DOMString localName);
 	public function removeAttributeNS( namespaceURI : DOMString, localName : DOMString) : Void { }
-										
-	// Introduced in DOM Level 2:
-	//Attr               getAttributeNodeNS(in DOMString namespaceURI, 
-										//in DOMString localName)
-										//raises(DOMException);
-	public function getAttributeNodeNS( namespaceURI : DOMString, localName : DOMString ) : Attr { }
-										
-	// Introduced in DOM Level 2:
-	//Attr               setAttributeNodeNS(in Attr newAttr)
-										//raises(DOMException);
-	public function setAttributeNodeNS( newAttr : Attr ) : Attr { }
-										
-	// Introduced in DOM Level 2:
-	//NodeList           getElementsByTagNameNS(in DOMString namespaceURI, 
-											//in DOMString localName)
-										//raises(DOMException);
-	public function getElementsByTagNameNS( namespaceURI : DOMString, localName : DOMString ) : NodeList
-										
-	// Introduced in DOM Level 2:
-	//boolean            hasAttribute(in DOMString name);
+
+	//boolean hasAttribute(DOMString name);
 	public function hasAttribute( name : DOMString ) : Bool { }
 
-	// Introduced in DOM Level 2:
-	//boolean            hasAttributeNS(in DOMString namespaceURI, 
-									//in DOMString localName)
-										//raises(DOMException);
+	//boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 	public function hasAttributeNS( namespaceURI : DOMString, localName : DOMString ) : Bool { }
-										
-	// Introduced in DOM Level 3:
-	//readonly attribute TypeInfo        schemaTypeInfo;
-	public var schemaTypeInfo( default, never ) : TypeInfo;
 
-	// Introduced in DOM Level 3:
-	//void               setIdAttribute(in DOMString name, 
-									//in boolean isId)
-										//raises(DOMException);
-	public function setIdAttribute( name : DOMString, isId : Bool) : Void;
-										
-	// Introduced in DOM Level 3:
-	//void               setIdAttributeNS(in DOMString namespaceURI, 
-									  //in DOMString localName, 
-									  //in boolean isId)
-										//raises(DOMException);
-	public function setIdAttributeNS( namespaceURI : DOMString, localName : DOMString, isId : Bool ) : Void { }
-										
-	// Introduced in DOM Level 3:
-	//void               setIdAttributeNode(in Attr idAttr, 
-										//in boolean isId)
-										//raises(DOMException);
-	public function setIdAttributeNode( idAttr : Attr, isId : Bool ) : Void
-										
+	//HTMLCollection getElementsByTagName(DOMString localName);
+	public function getElementsByTagName( name : DOMString ) : NodeList { } // FIXME return HTMLCollection?
+
+	//HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+	public function getElementsByTagNameNS( namespaceURI : DOMString, localName : DOMString ) : NodeList { } // FIXME return HTMLCollection?
+	
+	//HTMLCollection getElementsByClassName(DOMString classNames);
+	public function getElementsByClassName( classNames : DOMString ) : NodeList { } // FIXME return HTMLCollection?
+
+	//TODO readonly attribute HTMLCollection children;
+	//TODO readonly attribute Element? firstElementChild;
+	//TODO readonly attribute Element? lastElementChild;
+	//TODO readonly attribute Element? previousElementSibling;
+	//TODO readonly attribute Element? nextElementSibling;
+	//TODO readonly attribute unsigned long childElementCount;
+
+	// NEW
+	//TODO void prepend((Node or DOMString)... nodes);
+	//TODO void append((Node or DOMString)... nodes);
+	//TODO void before((Node or DOMString)... nodes);
+	//TODO void after((Node or DOMString)... nodes);
+	//TODO void replace((Node or DOMString)... nodes);
+	//TODO void remove();
 }
