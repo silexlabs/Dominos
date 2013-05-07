@@ -171,6 +171,11 @@ class TreeBuilder
 	private var doc : Document;
 
 	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#pending-table-character-tokens
+	 */
+	private var ptct : Array<Token>;
+
+	/**
 	 * The stack of open elements
 	 * 
 	 * @see http://www.w3.org/TR/html5/syntax.html#the-stack-of-open-elements
@@ -178,6 +183,8 @@ class TreeBuilder
 	private var stack : Array<Element>;
 	
 	/**
+	 * The list of active formatting elements
+	 * 
 	 * @see http://www.w3.org/TR/html5/syntax.html#list-of-active-formatting-elements
 	 */
 	private var lafe : Array<ActiveFormattingElt>;
@@ -389,7 +396,7 @@ class TreeBuilder
 				switch (t)
 				{
 					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						insertChar( currentNode(), c );
+						insertChar( currentNode(), t );
 					case COMMENT( d ):
 						currentNode().appendChild( doc.createComment( d ) );
 					case DOCTYPE( name, publicId, systemId, forceQuirks ):
@@ -479,7 +486,7 @@ class TreeBuilder
 				switch (t)
 				{
 					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						insertChar( currentNode(), c );
+						insertChar( currentNode(), t );
 					case COMMENT( d ):
 						currentNode().appendChild( doc.createComment( d ) );
 					case DOCTYPE( _ ):
@@ -519,10 +526,10 @@ class TreeBuilder
 						// ignore the token
 					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
 						reconstructActiveFormattingElements();
-						insertChar( currentNode(), c);
+						insertChar( currentNode(), t);
 					case CHAR( c ) if (!(c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20)):
 						reconstructActiveFormattingElements();
-						insertChar( currentNode(), c);
+						insertChar( currentNode(), t);
 						framesetOK = false;
 					case COMMENT( d ):
 						currentNode().appendChild( doc.createComment(d) );
@@ -1236,196 +1243,519 @@ class TreeBuilder
 				switch (t)
 				{
 					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
+						insertChar( currentNode(), t );
+						//Note: This can never be a U+0000 NULL character; the tokenizer converts those to U+FFFD REPLACEMENT CHARACTER characters.
+					case EOF:
+						//TODO parse error
+						if (currentNode().nodeName == "script")
+						{
+							//TODO mark the script element as "already started".
+						}
+						stack.pop();
+						im = om;
+						processToken( t );
+					case END_TAG( "script", selfClosing, attrs ):
+						//TODO Provide a stable state. @see http://www.w3.org/TR/html5/webappapis.html#provide-a-stable-state
 						
-					case COMMENT( d ):
+						var s = currentNode();
+						stack.pop();
+						im = om;
 						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
+						//TODO TODO TODO TODO TODO TODO TODO TODO 
 						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case END_TAG( _, _, _ ):
+						stack.pop();
+						im = om;
 				}
 			case IN_TABLE:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
+					case CHAR( _ ) if (Lambda.has(["table","tbody","tfoot","thead","tr"],currentNode().nodeName)):
+						ptct = new Array<Token>();
+						om = im;
+						im = IN_TABLE_TEXT;
+						processToken( t );
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						currentNode().appendChild( doc.createComment( d ) );
+					case DOCTYPE( _, _, _, _ ):
+						//TODO parse error
+						//ignore token
+					case START_TAG( "caption", _, _ ):
+						//Clear the stack back to a table context.
+						clearStackBackToTableContext();
+						//Insert a marker at the end of the list of active formatting elements.
+						//Insert an HTML element for the token, then switch the insertion mode to "in caption".
+						lafe.push({e:insertHTMLElement( t ), t:t});
+						im = IN_CAPTION;
+					case START_TAG( "colgroup", _, _ ):
+						clearStackBackToTableContext();
+						insertHTMLElement( t );
+						im = IN_COLUMN_GROUP;
+					case START_TAG( "col", _, _ ):
+						processToken( START_TAG( "colgroup", false, [] ) );
+						processToken( t );
+					case START_TAG("tbody",_,_) | START_TAG("tfoot",_,_) | START_TAG("thead",_,_):
+						clearStackBackToTableContext();
+						insertHTMLElement( t );
+						im = IN_TABLE_BODY;
+					case START_TAG("td", _, _) | START_TAG("th", _, _) | START_TAG("tr", _, _):
+						processToken("tbody",false,[]);
+						processToken( t );
+					case START_TAG("table", _, _):
+						//TODO parse error
+						processToken(END_TAG("table", false, []));
+						//TODO then, if that token wasn't ignored, reprocess the current token.
+						//Note: The fake end tag token here can only be ignored in the fragment case.
+					case END_TAG( "table", selfClosing, attrs ):
+						if (!isEltInTableScope("table"))
+						{
+							//TODO parse error
+							//ignore token
+						}
+						//Pop elements from this stack until a table element has been popped from the stack.
+						while (stack.pop().nodeName != "table") { }
+						//Reset the insertion mode appropriately.
+						resetInsertionMode();
+					case END_TAG(tg, _, _) if (Lambda.has(["body", "caption", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"],tg)):
+						//TODO parse error
+						//ignore token
+					case START_TAG("style", _, _) | START_TAG("script", _, _):
+						processToken( t, IN_HEAD);
+					case START_TAG("input", _, attrs) if( attrs.get("type") != null && attrs.get("type") != "hidden" ):
+						//TODO parse error
+						insertHTMLElement( t );
+						stack.pop();
+						//TODO Acknowledge the token's self-closing flag, if it is set.
+					case START_TAG("form", _, _):
+						//TODO parse error
+						if (fp != null)
+						{
+							fp = insertHTMLElement( t );
+							stack.pop();
+						}
+					case EOF:
+						//If the current node is not the root html element, then this is a parse error.
+						//Note: The current node can only be the root html element in the fragment case.
+						if (currentNode().nodeName != "html")
+						{
+							//TODO parse error
+						}
+						stopParsing();
+					case _:
+						//TODO parse error
+						processToken( t, IN_BODY); // FIXME
+						//TODO except that whenever a node would be inserted into the current node when the current node is a table, tbody, tfoot, thead, or tr element, 
+						//then it must instead be foster parented.
 				}
 			case IN_TABLE_TEXT:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
-					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case CHAR( 0 ):
+						//TODO parse error
+						//ignore token
+					case CHAR( _ ):
+						ptct.push( t );
+					case _:
+						//If any of the tokens in the pending table character tokens list are character tokens that are not space characters, 
+						if (Lambda.exists( ptct, function(ct) { return !isSpaceChar(ct); } ))
+						{
+							//TODO reprocess the character tokens in the pending table character tokens list using the rules given in the 
+							//"anything else" entry in the "in table" insertion mode. => create a ANYTHING ELSE TOKEN and a use rules entry in processToken ?
+						}
+						else
+						{
+							//Otherwise, insert the characters given by the pending table character tokens list into the current node.
+							for (ct in ptct)
+							{
+								insertChar(currentNode(),ct);
+							}
+							//Switch the insertion mode to the original insertion mode and reprocess the token.
+							im = om;
+							processToken(t);
+						}
 				}
 			case IN_CAPTION:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
-					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case END_TAG( "caption", _, _ ):
+						 //TODO this is fragment case
+						//if (!isEltInTableScope("caption"))
+						//{
+							//TODO parse error
+							//ignore token
+						//}
+						//else
+						//{
+							genImpliedEndTags();
+							if (currentNode().nodeName == "caption")
+							{
+								//TODO parse error
+							}
+							//Pop elements from this stack until a caption element has been popped from the stack.
+							while (stack.pop().nodeName != "caption") { }
+							clearLafeUntilLastMarker();
+							im = IN_TABLE;
+						//}
+					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("td",_,_)|START_TAG("tfoot",_,_)|START_TAG("th",_,_)|START_TAG("thead",_,_)|START_TAG("tr",_,_)|END_TAG("table",_,_):
+						//TODO parse error
+						//TODO Act as if an end tag with the tag name "caption" had been seen, then, if that token wasn't ignored, reprocess the current token.
+					case END_TAG("body",_,_)|END_TAG("col",_,_)|END_TAG("colgroup",_,_)|END_TAG("html",_,_)|END_TAG("tbody",_,_)|END_TAG("td",_,_)|END_TAG("tfoot",_,_)|END_TAG("th",_,_)|END_TAG("thead",_,_)|END_TAG("tr",_,_):
+						//TODO parse error
+						//ignore token
+					case _:
+						processToken( t, IN_BODY );
 				}
 			case IN_COLUMN_GROUP:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
+					case CHAR(0x9)|CHAR(0xA)|CHAR(0xC)|CHAR(0xD)|CHAR(0x20):
+						insertChar(currentNode(), t);
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						currentNode().appendChild(doc.createComment(d));
+					case DOCTYPE(_,_,_,_):
+						//TODO parse error
+						//ignore token
+					case START_TAG( "html", _, _ ):
+						processToken( t, IN_BODY );
+					case START_TAG( "col", _, _ ):
+						insertHTMLElement(t);
+						stack.pop();
+						//TODO Acknowledge the token's self-closing flag, if it is set.
+					case END_TAG( "colgroup", _, _ ):
+						//TODO If the current node is the root html element, then this is a parse error; ignore the token. (fragment case)
+						stack.pop();
+						im = IN_TABLE;
+					case END_TAG( "col", _, _ ):
+						//TODO parse error
+						//ignore token
+					//case EOF://TODO If the current node is the root html element, then stop parsing. (fragment case) Otherwise, act as described in the "anything else" entry below.
+					case _:
+						//TODO Act as if an end tag with the tag name "colgroup" had been seen, and then, if that token wasn't ignored, reprocess the current token.
+						//Note: The fake end tag token here can only be ignored in the fragment case.
 				}
 			case IN_TABLE_BODY:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
-					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case START_TAG( "tr", _, _ ):
+						clearStackBackToTableBodyContext();
+						insertHTMLElement( t );
+						im = IN_ROW;
+					case START_TAG("th", _, _) | START_TAG("td", _, _):
+						//TODO parse error
+						processToken( START_TAG( "tr", false, [] ) );
+						processToken( t );
+					case END_TAG(tg, _, _) if(tg=="tbody"||tg=="tfoot"||tg=="thead"):
+						if (!isEltInTableScope(tg))
+						{
+							//TODO parse error
+							//ignore token
+						}
+						else
+						{
+							clearStackBackToTableBodyContext();
+						}
+						stack.pop();
+						im = IN_TABLE;
+					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("tfoot",_,_)|START_TAG("thead",_,_)|END_TAG("table",_,_):
+						// TODO If the stack of open elements does not have a tbody, thead, or tfoot element in table scope, this is a parse error. Ignore the token. (fragment case)
+						clearStackBackToTableBodyContext();
+						processToken( END_TAG( currentNode().nodeName, false, [] ) );
+						processToken( t );
+					case END_TAG("body", _, _) | END_TAG("caption", _, _) | END_TAG("col", _, _) | END_TAG("colgroup", _, _) | END_TAG("html", _, _) | END_TAG("td", _, _) | END_TAG("th", _, _) | END_TAG("tr", _, _):
+						//TODO parse error
+						//ignore token
+					case _:
+						processToken( t, IN_TABLE );
 				}
 			case IN_ROW:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
-					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case START_TAG("th", _, _) | START_TAG("td", _, _):
+						clearStackBackToTableRowContext();
+						lafe.push({e:insertHTMLElement( t ),t:t});
+						//Insert a marker at the end of the list of active formatting elements
+						im = IN_CELL;
+					case END_TAG( "tr", _, _ ):
+						//TODO If the stack of open elements does not have an element in table scope with the same tag name as the token, 
+						//this is a parse error. Ignore the token. (fragment case)
+						clearStackBackToTableRowContext();
+						stack.pop();
+						im = IN_TABLE_BODY;
+					case END_TAG(tg, _, _) if (tg == "tbody" || tg == "tfoot" || tg == "thead"):
+						if (!isEltInTableScope(tg))
+						{
+							//TODO parse error
+							//ignore token
+						}
+						else
+						{
+							processToken( END_TAG("tr", _, _) );
+							processToken( t );
+						}
+					case END_TAG(tg, _, _) if (tg == "body" || tg == "caption" || tg == "col" || tg == "colgroup" || tg == "html" || tg == "td" || tg == "th"):
+						//TODO parse error
+						//ignore token
+					case _:
+						processToken( t, IN_TABLE );
 				}
 			case IN_CELL:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
-					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case END_TAG(tg, _, _) if(tg=="td"||tg=="th"):
+						if (!isEltInTableScope(tg))
+						{
+							//TODO parse error
+							//ignore token
+						}
+						else
+						{
+							genImpliedEndTags();
+							if (currentNode().nodeName != tg)
+							{
+								//TODO parse error
+							}
+							while (stack.pop().nodeName != tg) { }
+							clearLafeUntilLastMarker();
+							im = IN_ROW;
+						}
+					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("td",_,_)|START_TAG("tfoot",_,_)|START_TAG("th",_,_)|START_TAG("thead",_,_)|START_TAG("tr",_,_):
+						//TODO If the stack of open elements does not have a td or th element in table scope, then this is a parse error; ignore the token. (fragment case)
+						closeCell();
+						processToken( t );
+					case END_TAG("body",_,_)|END_TAG("caption",_,_)|END_TAG("col",_,_)|END_TAG("colgroup",_,_)|END_TAG("html",_,_):
+						//TODO parse error
+						//ignore token
+					case END_TAG(tg, _, _) if (tg == "table" || tg == "tbody" || tg == "tfoot" || tg == "thead" || tg == "tr"):
+						if (!isEltInTableScope(tg))
+						{
+							//TODO parse error
+							//ignore token
+						}
+						else
+						{
+							closeCell();
+							processToken( t );
+						}
+					case _:
+						processToken( t, IN_BODY );
 				}
 			case IN_SELECT:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
+					case CHAR( 0 ):
+						//TODO parse error
+						//ignore token
+					case CHAR( _ ):
+						insertChar( currentNode(), t );
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						currentNode().appendChild( doc.createComment( d ) );
+					case DOCTYPE( _, _, _, _ ):
+						//TODO parse error
+						//ignore token
+					case START_TAG( "html", _, _ ):
+						processToken( t, IN_BODY );
+					case START_TAG( "option", _, _ ):
+						if ( currentNode().nodeName == "caption" )
+						{
+							processToken( END_TAG( "caption", false, [] ) );
+						}
+						insertHTMLElement( t );
+					case START_TAG( "optgroup", _, _ ):
+						if ( currentNode().nodeName == "option" )
+						{
+							processToken( END_TAG( "option", false, [] ) );
+						}
+						if ( currentNode().nodeName == "optgroup" )
+						{
+							processToken( END_TAG( "optgroup", false, [] ) );
+						}
+						insertHTMLElement( t );
+					case END_TAG( "optgroup", _, _ ):
+						if ( currentNode().nodeName == "option" && stack[stack.length-2].nodeName == "optgroup" )
+						{
+							processToken( END_TAG( "option", false, [] ) );
+						}
+						if ( currentNode().nodeName == "optgroup" )
+						{
+							stack.pop();
+							//TODO parse error
+							//ignore token
+						}
+					case END_TAG( "option", _, _ ):
+						if ( currentNode().nodeName == "option" )
+						{
+							stack.pop();
+						}
+						else
+						{
+							//TODO parse error
+							//ignore token
+						}
+					case END_TAG( "select", _, _ ):
+						//TODO If the stack of open elements does not have an element in select scope with the same tag name as the token, this is a parse error. 
+						//Ignore the token. (fragment case)
+						//if (!isEltInSelectScope("select"))
+						//{
+							//TODO parse error
+							//ignore token
+						//}
+						//else
+						//{
+							while ( stack.pop().nodeName != "select" ) { }
+							resetInsertionMode();
+						//}
+					case START_TAG("select", sc, attrs):
+						//TODO parse error
+						processToken( END_TAG( "select", scopeMarkersList, attrs ) );
+					case START_TAG("input", _, _) | START_TAG("keygen", _, _) | START_TAG("textarea", _, _):
+						//TODO parse error
+						//TODO If the stack of open elements does not have a select element in select scope, ignore the token. (fragment case)
+						//else
+						processToken( END_TAG( "select", false, [] ) );
+						processToken( t );
+					case START_TAG( "script", _, _ ):
+						processToken( t, IN_HEAD );
+					case EOF:
+						if ( currentNode() != stack [0] ) //If the current node is not the root html element,
+						{
+							//TODO parse error
+						}
+						stopParsing();
+					case _:
+						//TODO parse error
 				}
 			case IN_SELECT_IN_TABLE:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
-					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+					case START_TAG("caption",_,_)|START_TAG("table",_,_)|START_TAG("tbody",_,_)|START_TAG("tfoot",_,_)|START_TAG("thead",_,_)|START_TAG("tr",_,_)|START_TAG("td",_,_)|START_TAG("th",_,_):
+						//TODO parse error
+						processToken( END_TAG( "select", false, [] ) );
+						processToken( t );
+					case END_TAG(tg,_,_) if(tg=="caption" || tg=="table" || tg=="tbody" || tg=="tfoot" || tg=="thead" || tg=="tr" || tg=="td" || tg=="th"):
+						//TODO parse error
+						if (isEltInTableScope(tg))
+						{
+							processToken( END_TAG( "select", false, [] ) );
+						}
+						//else ignore token
+					case _:
+						processToken( t, IN_SELECT );
 				}
 			case AFTER_BODY:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
+					case CHAR( 0x9 ) | CHAR( 0xA ) | CHAR( 0xC ) | CHAR( 0xD ) | CHAR( 0x20 ) :
+						processToken( t, IN_BODY );
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						stack[0].appendChild( doc.createComment(d) );
+					case DOCTYPE( _, _, _, _ ):
+						//TODO parse error
+						//ignore token
+					case START_TAG( "html", _, _ ):
+						processToken( t, IN_BODY );
+					case END_TAG("html",_,_):
+						//TODO If the parser was originally created as part of the HTML fragment parsing algorithm, this is a parse error; ignore the token. (fragment case)
+						//else
+						//{
+							im = AFTER_AFTER_BODY;
+						//}
+					case EOF:
+						stopParsing();
+					case _:
+						//TODO parse error
+						im = IN_BODY;
+						processToken(t);
 				}
 			case IN_FRAMESET:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
+					case CHAR( 0x9 ) | CHAR( 0xA ) | CHAR( 0xC ) | CHAR( 0xD ) | CHAR( 0x20 ) :
+						insertChar( currentNode(), t );
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						currentNode().appendChild( doc.createComment(d) );
+					case DOCTYPE( _, _, _, _ ):
+						//TODO parse error
+						//ignore token
+					case START_TAG( "html", _, _ ):
+						processToken( t, IN_BODY );
+					case START_TAG( "frameset", _, _ ):
+						insertHTMLElement( t );
+					case END_TAG( "frameset", _, _ ):
+						//TODO If the current node is the root html element, then this is a parse error; ignore the token. (fragment case)
+						//else
+						stack.pop();
+						//TODO If the parser was not originally created as part of the HTML fragment parsing algorithm (fragment case), 
+						//and the current node is no longer a frameset element, then switch the insertion mode to "after frameset".
+						if (currentNode().nodeName != "frameset")
+						{
+							im = AFTER_FRAMESET;
+						}
+					case START_TAG( "frame", _, _ ):
+						insertHTMLElement( t );
+						stack.pop();
+						//TODO Acknowledge the token's self-closing flag, if it is set.
+					case START_TAG( "noframes", _, _ ):
+						processToken( t, IN_HEAD );
+					case EOF:
+						if (currentNode() != stack[0])
+						{
+							//TODO parse error
+						}
+						stopParsing();
+					case _:
+						//TODO parse error
+						//ignore token
 				}
 			case AFTER_FRAMESET:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
+					case CHAR( 0x9 ) | CHAR( 0xA ) | CHAR( 0xC ) | CHAR( 0xD ) | CHAR( 0x20 ) :
+						insertChar( currentNode(), t );
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						currentNode().appendChild( doc.createComment(d) );
+					case DOCTYPE( _, _, _, _ ):
+						//TODO parse error
+						//ignore token
+					case START_TAG( "html", _, _ ):
+						processToken( t, IN_BODY );
+					case END_TAG( "html", _, _ ):
+						im = AFTER_AFTER_FRAMESET;
+					case START_TAG( "noframes", _, _ ):
+						processToken( t, IN_HEAD );
+					case EOF:
+						stopParsing();
+					case _:
+						//TODO parse error
+						//ignore token
 				}
 			case AFTER_AFTER_BODY:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						doc.appendChild( doc.createComment(d) );
+					case DOCTYPE(_,_,_,_)|CHAR(0x9)|CHAR(0xA)|CHAR(0xC)|CHAR(0xD)|CHAR(0x20)|START_TAG("html",_,_):
+						processToken( t, IN_BODY );
+					case EOF:
+						stopParsing();
+					case _:
+						//TODO parse error
+						im = IN_BODY;
+						processToken( t );
 				}
 			case AFTER_AFTER_FRAMESET:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
-						
 					case COMMENT( d ):
-						
-					case DOCTYPE( name, publicId, systemId, forceQuirks ):
-						
-					case START_TAG( tagName, selfClosing, attrs ):
-
-					case END_TAG( tagName, selfClosing, attrs ):
+						doc.appendChild(doc.createComment(d));
+					case DOCTYPE(_,_,_,_)|CHAR(0x9)|CHAR(0xA)|CHAR(0xC)|CHAR(0xD)|CHAR(0x20)|START_TAG("html",_,_):
+						processToken( t, IN_BODY );
+					case EOF:
+						stopParsing();
+					case START_TAG( "noframes", _, _ ):
+						processToken( t, IN_HEAD );
+					case _:
+						//TODO parse error
+						//ignore token
 				}
 		}
 	}
@@ -1477,6 +1807,137 @@ class TreeBuilder
 
 		Queue a task to mark the Document as completely loaded.
 		*/
+	}
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#reset-the-insertion-mode-appropriately
+	 */
+	function resetInsertionMode()
+	{
+		var l = false;
+		var n = currentNode();
+		do
+		{
+			// TODO If node is the first node in the stack of open elements, then set last to true and set node to the context element. (fragment case)
+			//if (n == stack[0])
+			//{
+				//l = true;
+				//
+			//}
+			// TODO If node is a select element, then switch the insertion mode to "in select" and abort these steps. (fragment case)
+			//if ()
+			//{
+				//
+			//}
+			//If node is a td or th element and last is false, then switch the insertion mode to "in cell" and abort these steps.
+			if (!l && (n.nodeName=="td"||n.nodeName=="th"))
+			{
+				im = IN_CELL;
+				return;
+			}
+			//If node is a tr element, then switch the insertion mode to "in row" and abort these steps.
+			if (n.nodeName=="tr")
+			{
+				im = IN_ROW;
+				return;
+			}
+			//If node is a tbody, thead, or tfoot element, then switch the insertion mode to "in table body" and abort these steps.
+			if (n.nodeName == "tbody" || n.nodeName == "thead" || n.nodeName == "tfoot")
+			{
+				im = IN_TABLE_BODY;
+				return;
+			}
+			//If node is a caption element, then switch the insertion mode to "in caption" and abort these steps.
+			if (n.nodeName=="caption")
+			{
+				im = IN_CAPTION;
+			}
+			// TODO If node is a colgroup element, then switch the insertion mode to "in column group" and abort these steps. (fragment case)
+			//if ()
+			//{
+				//
+			//}
+			//If node is a table element, then switch the insertion mode to "in table" and abort these steps.
+			if (n.nodeName == "table")
+			{
+				im = IN_TABLE;
+				return;
+			}
+			// TODO If node is a head element, then switch the insertion mode to "in body" ("in body"! not "in head"!) and abort these steps. (fragment case)
+			//if ()
+			//{
+				//
+			//}
+			//If node is a body element, then switch the insertion mode to "in body" and abort these steps.
+			if (n.nodeName == "body")
+			{
+				im = IN_BODY;
+				return;
+			}
+			// TODO If node is a frameset element, then switch the insertion mode to "in frameset" and abort these steps. (fragment case)
+			//if ()
+			//{
+				//
+			//}
+			// TODO If node is an html element, then switch the insertion mode to "before head" Then, abort these steps. (fragment case)
+			//if ()
+			//{
+				//
+			//}
+			// TODO If last is true, then switch the insertion mode to "in body" and abort these steps. (fragment case)
+			//if ()
+			//{
+				//
+			//}
+			//Let node now be the node before node in the stack of open elements.
+			n = stack[ Lambda.indexOf(n) - 1 ];
+		} while (true);
+	}
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#close-the-cell
+	 */
+	function closeCell() : Void
+	{
+		//Note: The stack of open elements cannot have both a td and a th element in table scope at the same time, 
+		//nor can it have neither when the close the cell algorithm is invoked.
+		if (isEltInTableScope("td"))
+		{
+			processToken( END_TAG( "td", false, [] ) );
+		}
+		else // has a th element in table scope
+		{
+			processToken( END_TAG( "th", false, [] ) );
+		}
+	}
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#clear-the-stack-back-to-a-table-row-context
+	 */
+	function clearStackBackToTableRowContext() : Void
+	{
+		while (currentNode().nodeName != "html" && currentNode().nodeName != "tr")
+		{
+			stack().pop();
+		}
+	}
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#clear-the-stack-back-to-a-table-body-context
+	 */
+	function clearStackBackToTableBodyContext() : Void
+	{
+		while (currentNode().nodeName != "html" && currentNode().nodeName != "thead" && currentNode().nodeName != "tbody" && currentNode().nodeName != "tfoot")
+		{
+			stack().pop();
+		}
+	}
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#clear-the-stack-back-to-a-table-context
+	 * Note: The current node being an html element after this process is a fragment case.
+	 */
+	function clearStackBackToTableContext() : Void
+	{
+		while (currentNode().nodeName != "html" && currentNode().nodeName != "table")
+		{
+			stack().pop();
+		}
 	}
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#clear-the-list-of-active-formatting-elements-up-to-the-last-marker
@@ -1714,7 +2175,7 @@ class TreeBuilder
 	 * @param	c
 	 * @see http://www.w3.org/TR/html5/syntax.html#insert-a-character
 	 */
-	function insertChar( node : Node, c : Int ) : Void
+	function insertChar( node : Node, ct : Token ) : Void
 	{
 		var tn : Text;
 		if ( !node.hasChildNodes() || node.lastChild.nodeType != Node.TEXT_NODE )
@@ -1726,6 +2187,27 @@ class TreeBuilder
 		{
 			tn = node.lastChild;
 		}
-		tn.appendData( String.fromCharCode( c ) );
+		switch(ct)
+		{
+			case CHAR(c):
+				tn.appendData( String.fromCharCode( c ) );
+			case _:
+				throw "Error: CHAR token expected";
+		}
+	}
+	/**
+	 * @see http://www.w3.org/TR/html5/infrastructure.html#space-character
+	 */
+	function isSpaceChar( ct : Token )
+	{
+		switch (ct)
+		{
+			case CHAR(c) if( c == 0x20 || c == 0x9 || c == 0xA || c == 0xC || c == 0xD ):
+				return true;
+			case CHAR(c):
+				return false;
+			case _:
+				throw "Error: CHAR token expected";
+		}
 	}
 }

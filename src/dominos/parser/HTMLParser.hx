@@ -3,6 +3,8 @@ package dominos.parser;
 import dominos.parser.html.InputStream;
 import dominos.parser.html.Tokenizer;
 
+import dominos.dom.Element;
+
 /**
  * ...
  * @author Thomas Fétiveau
@@ -17,8 +19,11 @@ class HTMLParser
 		trace("parsing finished");
 	}
 
-	static public function parseFragment()
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#concept-frag-parse-context
+	 */
+	static public function parseFragment( input : String, ?context : Element = null )
 	{
-		
+		//TODO
 	}
 }
