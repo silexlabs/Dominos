@@ -15,6 +15,6 @@ class Dominos
 		{
 			throw "Mime type "+mime+" not supported!";
 		}
-		HTMLParser.parse( str );
+		var doc = HTMLParser.parse( str );
 	}
 }

@@ -7,6 +7,10 @@ using StringTools;
 /**
  * @see http://www.w3.org/TR/html5/syntax.html#input-stream
  * 
+ * TODO
+ *  - instead of parsing the string as an array, we could use two stringbuf, one for consumed chars and one for chars to consume
+ *  - manage insertion point ?
+ * 
  * @author Thomas Fétiveau
  */
 class InputStream

@@ -14,18 +14,23 @@ package dominos.dom;
  */
 class Document extends Node
 {
-	// Modified in DOM Level 3:
+	//readonly attribute DOMImplementation implementation;
+	public var implementation( default, never ) : DOMImplementation;
+
 	//readonly attribute DocumentType    doctype;
 	public var doctype( default, never ) : DocumentType;
-
-	//readonly attribute DOMImplementation implementation;
-	public var implementation : DOMImplementation;
 	
 	//readonly attribute DOMString compatMode;
 	public var compatMode( default, never ) : DOMString;
 
 	//readonly attribute Element         documentElement;
-	public var documentElement : Element;
+	public var documentElement( default, never ) : Element;
+	
+	public function new( implementation : DOMImplementation )
+	{
+		super();
+		this.implementation = implementation;
+	}
 
 	//Element            createElement(in DOMString tagName)
 	public function createElement( tagName : DOMString ) : Element { };

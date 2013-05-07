@@ -17,9 +17,10 @@ package dominos.dom;
  * 
  * Documentation for this class was provided by <a href="https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#node">W3C</a>
  * 
+ * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#node
  * @author Thomas Fétiveau
  */
-class Node
+class Node extends EventTarget
 {
 	// NodeType
 	//const unsigned short
@@ -72,6 +73,12 @@ class Node
 	
 	//attribute DOMString? textContent;
 	public var textContent : DOMString;
+	
+	public function new()
+	{
+		//init childNodes list
+		childNodes = [];
+	}
 	
 	//Node insertBefore(Node node, Node? child);
 	public function insertBefore( newChild:Node, refChild:Node ) : Node { }

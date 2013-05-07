@@ -59,7 +59,6 @@ typedef ActiveFormattingElt =
  * steps of the HTML parsing algorithm.
  * 
  * TODO
- *  - warn about the use of obsolete features ? like marquee for example...
  *  - manage scrips
  *  - manage fragment parsing
  *  - manage few cases where (if next char is a LF, then ignore it)
@@ -67,6 +66,8 @@ typedef ActiveFormattingElt =
  *  - TEXT => case END_TAG( "script", selfClosing, attrs )
  *  - BEFORE_HTML => case START_TAG( "html", _, _ )
  *  - 
+ * 
+ *  - warn about the use of obsolete features ? like marquee for example...
  * 
  * @author Thomas Fétiveau
  */
@@ -251,8 +252,11 @@ class TreeBuilder
 	public function new( tokenizer : Tokenizer ) 
 	{
 		dom = new DOMImplementation();
+		//the document that will result of the HTML parsing
 		doc = dom.createHTMLDocument();
+		//need ref to tokenizer to change its state
 		tok = tokenizer;
+		//init list of active formatting elts to empty array
 		lafe = [];
 	}
 	

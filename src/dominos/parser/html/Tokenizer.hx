@@ -241,17 +241,27 @@ class CurrentDoctypeHelper
  */
 class Tokenizer
 {
-	private var is : InputStream;
-	
-	private var tb : TreeBuilder;
-	
+	/**
+	 * 
+	 */
+	public var is(default,never) : InputStream;
+	/**
+	 * 
+	 */
+	private var tb(default,never) : TreeBuilder;
+	/**
+	 * 
+	 */
 	var state : State;
 
-	public function new( is : InputStream ) 
+	/**
+	 * 
+	 */
+	public function new( is : InputStream, tb : TreeBuilder ) 
 	{
 		this.is = is;
 		
-		this.tb = new TreeBuilder();
+		this.tb = tb;
 	}
 	
 	/**
@@ -265,7 +275,7 @@ class Tokenizer
 	/**
 	 * 
 	 */
-	public function parse()
+	public function parse() : Void
 	{
 		state = DATA;
 		
@@ -1867,6 +1877,5 @@ class Tokenizer
 					throw "ERROR: unknown Tokenizer state";
 			}
 		}
-		
 	}
 }

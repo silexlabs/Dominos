@@ -8,10 +8,11 @@ package dominos.dom;
 class EventTarget
 {
 	//void addEventListener(DOMString type, EventListener? callback, optional boolean capture = false);
-	//void removeEventListener(DOMString type, EventListener? callback, optional boolean capture = false);
-	//boolean dispatchEvent(Event event);
-}
+	public function addEventListener( type : DOMString, ?callback : EventListener, ?capture : Bool = false) { }
 
-//callback interface EventListener {
-  //void handleEvent(Event event);
-//};
+	//void removeEventListener(DOMString type, EventListener? callback, optional boolean capture = false);
+	public function removeEventListener( type : DOMString, callback : EventListener, ?capture : Bool = false) { }
+
+	//boolean dispatchEvent(Event event);
+	public function dispatchEvent(event : EventListener) { }
+}

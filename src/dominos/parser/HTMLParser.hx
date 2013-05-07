@@ -2,7 +2,9 @@ package dominos.parser;
 
 import dominos.parser.html.InputStream;
 import dominos.parser.html.Tokenizer;
+import dominos.parser.html.TreeBuilder;
 
+import dominos.dom.Document;
 import dominos.dom.Element;
 
 /**
@@ -11,12 +13,13 @@ import dominos.dom.Element;
  */
 class HTMLParser
 {
-	static public function parse( data : String )
+	static public function parse( data : String ) : Document
 	{
 		//var tokenizer = new Tokenizer( new InputStream( haxe.io.Bytes.ofString( data ) ) );
-		var tokenizer = new Tokenizer( new InputStream( data ) );
-		var domDoc = tokenizer.parse();
+		var tb = new TreeBuilder( new Tokenizer( new InputStream( data ) ) );
+		var domDoc = tb.parse();
 		trace("parsing finished");
+		trace("serialized result: "+domDoc);
 	}
 
 	/**
