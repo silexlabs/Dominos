@@ -98,9 +98,18 @@ class InputStream
 	 * 
 	 */
 	private var data : String;
-	
+	/**
+	 * 
+	 */
 	private var currCharI : Int;
-
+	/**
+	 * @see http://www.w3.org/TR/html5/syntax.html#insertion-point
+	 */
+	var ip : Int;
+	
+	/**
+	 * 
+	 */
 	//public function new( data : Bytes )
 	public function new( data : String )
 	{
