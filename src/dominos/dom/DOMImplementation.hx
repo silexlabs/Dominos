@@ -7,17 +7,22 @@ package dominos.dom;
  */
 class DOMImplementation
 {
+	/**
+	 * Returns a doctype, with the given qualifiedName, publicId, and systemId. If qualifiedName does not match the Name production, 
+	 * an "InvalidCharacterError" exception is thrown, and if it does not match the QName production, a "NamespaceError" exception is thrown. 
+	 */
 	//DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId);
 	public function createDocumentType( qualifiedName : DOMString, publicId : DOMString, systemId : DOMString ) : DocumentType
 	{
+		//TODO @see http://www.w3.org/TR/xml/#NT-Name
 		//If qualifiedName does not match the Name production, throw an "InvalidCharacterError" exception and terminate these steps.
 
+		//TODO @see http://www.w3.org/TR/xml-names/#NT-QName
 		//If qualifiedName does not match the QName production in, throw a "NamespaceError" exception and terminate these steps.
 
-		//Return a new doctype, with qualifiedName as its name, publicId as its public ID, and systemId as its system ID, and with its node document set to the associated document of the context object. 
 		return new DocumentType( qualifiedName, publicId, systemId);
 		//Note: No check is performed that the publicId matches the PublicChar or that the systemId does not contain both a '"' and "'". 
-	//}
+	}
 	//XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, DocumentType? doctype);
 	/*public function createDocument( namespace : DOMString, qualifiedName : DOMString, doctype : DocumentType ) : XMLDocument
 	{
@@ -38,27 +43,27 @@ class DOMImplementation
 	// Document createHTMLDocument(optional DOMString title);
 	public function createHTMLDocument( ?title : DOMString ) : Document
 	{
-		//Let doc be a newly created document.
+		//1. Let doc be a new document that is an HTML document. 
 		var doc = new Document();
-		//Mark doc as being an HTML document.
-	//TODO How ?
-		//Set doc's content type to "text/html".
-	//TODO
-		//Create a doctype, with "html" as its name and with its node document set to doc. Append the newly created node to doc.
-	//FIXME this is contradicting the HTML parsing algorithm where we parse doctype token and append it to the already created doc
+		doc.implementation = this;
+		doc.URL = "about:blank";
+		doc.readyState = "loading";
+		//2. Set doc's content type to "text/html".
+		doc.contentType = "text/html";
+		//3. Create a doctype, with "html" as its name and with its node document set to doc. Append the newly created node to doc. 
+//FIXME this is contradicting the HTML parsing algorithm where we parse doctype token and append it to the already created doc
 		//Create an html element in the HTML namespace, and append it to doc.
-	//FIXME this is contradicting the HTML parsing algorithm
+//FIXME this is contradicting the HTML parsing algorithm
 		//Create a head element in the HTML namespace, and append it to the html element created in the previous step.
-	//FIXME this is contradicting the HTML parsing algorithm
+//FIXME this is contradicting the HTML parsing algorithm
 		//If the title argument is not omitted:
-	//FIXME this is contradicting the HTML parsing algorithm
+//FIXME this is contradicting the HTML parsing algorithm
 			//Create a title element in the HTML namespace, and append it to the head element created in the previous step.
-	//FIXME this is contradicting the HTML parsing algorithm
+//FIXME this is contradicting the HTML parsing algorithm
 			//Create a Text node, set its data to title (which could be the empty string), and append it to the title element created in the previous step. 
-	//FIXME this is contradicting the HTML parsing algorithm
+//FIXME this is contradicting the HTML parsing algorithm
 		//Create a body element in the HTML namespace, and append it to the html element created in the earlier step.
-	//FIXME this is contradicting the HTML parsing algorithm
-		//Return doc. 
+//FIXME this is contradicting the HTML parsing algorithm
 		return doc;
 	}
 	//boolean hasFeature(DOMString feature, [TreatNullAs=EmptyString] DOMString version);

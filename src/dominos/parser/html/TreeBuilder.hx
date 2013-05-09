@@ -10,6 +10,16 @@ import dominos.html.HTMLElement;
 import dominos.parser.html.Tokenizer;
 
 /**
+ * The document quirks mode
+ * @see http://dom.spec.whatwg.org/#concept-document-no-quirks
+ */
+enum QuirksMode
+{
+	NO_QUIRKS;
+	QUIRKS;
+	LIMITED_QUIRKS;
+}
+/**
  * 
  */
 enum InsertionMode
@@ -242,34 +252,64 @@ class TreeBuilder
 	 */
 	private var framesetOK : Bool;
 	
-	// a reference to the tokenizer to change its state
-	var tok : Tokenizer;
+	/**
+	 * a reference to the tokenizer to change its state
+	 */
+	private var tok : Tokenizer;
+	/**
+	 * a reference to the input stream
+	 */
+	private var is : InputStream;
+	
+	/**
+	 * The currently being parsed document's mode.
+	 */
+	private var qm : QuirksMode;
 
 	/**
-	 * 
+	 * returns the doc if it's parsed
+	 */
+	public function getDoc() : Document
+	{
+		if (doc.readyState == "complete")
+		{
+			return doc;
+		}
+		throw "Error: did not finish parsing and assembling document yet!";
+	}
+	
+	/**
+	 * Creates a new TreeBuilder object for a given input stream and tokenizer
 	 * @param	tokenizer
 	 */
-	public function new( tokenizer : Tokenizer ) 
+	public function new( is : InputStream, tok : Tokenizer ) 
 	{
 		dom = new DOMImplementation();
 		//the document that will result of the HTML parsing
 		doc = dom.createHTMLDocument();
-		//need ref to tokenizer to change its state
-		tok = tokenizer;
+		// need ref to tokenizer
+		this.tok = tok;
+		// and to the input stream
+		this.is = is;
 		//init list of active formatting elts to empty array
 		lafe = [];
 	}
 	
 	/**
 	 * Process a HTML token.
+	 * 
+	 * Note: this method is able to modify any private field of the DOM entities.
+	 * 
 	 * @param	t	the Token to process
 	 * @param ?utrf	The "using the rules for" parameter.
+	 * 
 	 * @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
 	 */
+	@:access(dominos.dom)
 	public function processToken( t : Token, ?utrf : InsertionMode = null ) : TokenProcessRet
 	{
 		// @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
-		var m = utrf != null && Lambda.exists([IN_HEAD, IN_BODY, IN_TABLE, IN_SELECT], function(v:InsertionMode) { return Type.enumEq(utrf, v); } ) ? utrf : im;
+		var m = utrf != null && Lambda.exists( [IN_HEAD, IN_BODY, IN_TABLE, IN_SELECT], function(v:InsertionMode) { return Type.enumEq(utrf, v); } ) ? utrf : im;
 		// @see http://www.w3.org/TR/html5/syntax.html#acknowledge-self-closing-flag
 		var ack = false;
 		switch ( m )
@@ -309,27 +349,33 @@ class TreeBuilder
 						//to an HTML4 conformance checker.)
 
 						//Append a DocumentType node to the Document node
-						doc.appendChild( dom.createDocumentType( name != null ? name : "", publicId != null ? publicId : "", systemId != null ? systemId : "" ) );
-						//TODO And associate it with the Document object
+						var dt = dom.createDocumentType( name != null ? name : "", publicId != null ? publicId : "", systemId != null ? systemId : "" );
+						doc.appendChild( dt );
+						//And associate it with the Document object
+						doc.doctype = dt;
 						
 						if ( forceQuirks || name != "html" || 
 							publicId != null && (Lambda.exists(getPublicIdsStartWith(), function(pi:String) { return publicId.toLowerCase().indexOf(pi.toLowerCase()) == 0; } ) || Lambda.exists(["-//W3O//DTD W3 HTML Strict 3.0//EN//", "-/W3C/DTD HTML 4.0 Transitional/EN", "HTML"], function(pi:String) { return pi.toLowerCase() == publicId.toLowerCase(); } )) || 
 							systemId.toLowerCase() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd" ||
 							systemId == null && (publicId!=null && Lambda.exists( ["-//W3C//DTD HTML 4.01 Frameset//", "-//W3C//DTD HTML 4.01 Transitional//"], function(pi:String){ return publicId.toLowerCase().indexOf(pi.toLowerCase()) == 0; } )) )
 						{
-							//TODO set the Document to quirks mode
+							//set the Document to quirks mode
+							qm = QUIRKS;
 						}
 						else if ( publicId != null && 
 							(Lambda.exists(["-//W3C//DTD XHTML 1.0 Frameset//", "-//W3C//DTD XHTML 1.0 Transitional//"], function(pi:String) { return publicId.indexOf(pi) == 0; } ) || 
 							systemId != null && Lambda.exists(["-//W3C//DTD HTML 4.01 Frameset//", "-//W3C//DTD HTML 4.01 Transitional//"], function(pi:String) { return publicId.indexOf(pi) == 0; } ) ) )
 						{
-							//TODO set the Document to limited-quirks mode
+							//set the Document to limited-quirks mode
+							qm = LIMITED_QUIRKS;
 						}
 						im = BEFORE_HTML;
 					case _:
-						//TODO
-						//If the document is not an iframe srcdoc document, then this is a parse error; set the Document to quirks mode.
+						//TODO If the document is not an iframe srcdoc document, then this is a parse error; set the Document to quirks mode.
+						
 						//In any case, switch the insertion mode to "before html", then reprocess the current token.
+						im = BEFORE_HTML;
+						processToken( t );
 						//@see Document.compatMode
 						//@see http://www.w3.org/TR/html5/embedded-content-0.html#an-iframe-srcdoc-document
 				}
@@ -1063,7 +1109,7 @@ class TreeBuilder
 							clearLafeUntilLastMarker();
 						}
 					case START_TAG( "table", _, _ ):
-						if ( /* TODO If the Document is not set to quirks mode, and */ isEltInButtonScope("p") )
+						if ( !qm.equals(QUIRKS) && isEltInButtonScope("p") )
 						{
 							processToken( END_TAG( "p", false, [] ) );
 						}
@@ -1835,14 +1881,16 @@ class TreeBuilder
 	 */
 	function stopParsing() : Void
 	{
-		
-		//TODO Set the current document readiness to "interactive" and the insertion point to undefined.
-		
+		//Set the current document readiness to "interactive"
+		doc.readyState = "interactive";
+		//TODO  and the insertion point to undefined.
+
 		//Pop all the nodes off the stack of open elements.
 
 		//TODO If the list of scripts that will execute when the document has finished parsing is not empty, run these substeps:
 
-			//Spin the event loop until the first script in the list of scripts that will execute when the document has finished parsing has its "ready to be parser-executed" flag set and the parser's Document has no style sheet that is blocking scripts.
+			//Spin the event loop until the first script in the list of scripts that will execute when the document has finished parsing has its 
+			//"ready to be parser-executed" flag set and the parser's Document has no style sheet that is blocking scripts.
 
 			//Execute the first script in the list of scripts that will execute when the document has finished parsing.
 
@@ -1860,7 +1908,8 @@ class TreeBuilder
 
 			//Set the current document readiness to "complete".
 
-			//If the Document is in a browsing context, fire a simple event named load at the Document's Window object, but with its target set to the Document object (and the currentTarget set to the Window object).
+			//If the Document is in a browsing context, fire a simple event named load at the Document's Window object, but with its target set to the Document object 
+			//(and the currentTarget set to the Window object).
 
 		//If the Document is in a browsing context, then queue a task to run the following substeps:
 
@@ -1868,16 +1917,18 @@ class TreeBuilder
 
 			//Set the Document's page showing flag to true.
 
-			//Fire a pageshow event at the Window object of the Document, but with its target set to the Document object (and the currentTarget set to the Window object), using the PageTransitionEvent interface, with the persisted attribute initialized to false. This event must not bubble, must not be cancelable, and has no default action.
+			//Fire a pageshow event at the Window object of the Document, but with its target set to the Document object (and the currentTarget set to the Window object), 
+			//using the PageTransitionEvent interface, with the persisted attribute initialized to false. This event must not bubble, must not be cancelable, and has no default action.
 
-		//If the Document has any pending application cache download process tasks, then queue each such task in the order they were added to the list of pending application cache download process tasks, and then empty the list of pending application cache download process tasks. The task source for these tasks is the networking task source.
+		//If the Document has any pending application cache download process tasks, then queue each such task in the order they were added to the list of pending application cache 
+		//download process tasks, and then empty the list of pending application cache download process tasks. The task source for these tasks is the networking task source.
 
 		//If the Document's print when loaded flag is set, then run the printing steps.
 
 		//The Document is now ready for post-load tasks.
 
 		//Queue a task to mark the Document as completely loaded.
-		
+		doc.readyState = "complete";
 	}
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#reset-the-insertion-mode-appropriately

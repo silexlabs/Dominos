@@ -1,4 +1,5 @@
 package dominos.dom;
+import dominos.html.HTMLCollection;
 
 /**
  * The Document interface represents the entire HTML or XML document. Conceptually, it is the root of the document tree, 
@@ -12,140 +13,194 @@ package dominos.dom;
  * 
  * @author Thomas Fétiveau
  */
+@:allow(dominos.dom.DOMImplementation.createHTMLDocument)
 class Document extends Node
 {
-	//readonly attribute DOMImplementation implementation;
-	public var implementation( default, never ) : DOMImplementation;
-
-	//readonly attribute DocumentType    doctype;
-	public var doctype( default, never ) : DocumentType;
+	//Possible compat modes
+	static private inline COMPAT_QUIRKS : String = "BackCompat";
+	static private inline COMPAT_NO_OR_LIMITIED_QUIRKS : String = "CSS1Compat";
 	
-	//readonly attribute DOMString compatMode;
-	public var compatMode( default, never ) : DOMString;
-
-	//readonly attribute Element         documentElement;
-	public var documentElement( default, never ) : Element;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-implementation
+	 */
+	public var implementation( default, null ) : DOMImplementation;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-url
+	 */
+	public var URL( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-documenturi
+	 */
+	public var documentURI( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-compatmode
+	 */
+	public var compatMode( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-characterset
+	 */
+	public var characterSet( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-contenttype
+	 */
+	public var contentType( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-doctype
+	 */
+	public var doctype( default, null ) : DocumentType;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-documentelement
+	 */
+	public var documentElement( default, null ) : Element;
 	
-	public function new( implementation : DOMImplementation )
+	//TODO When the value is set, the user agent must fire a simple event named readystatechange at the Document object.
+	//@see http://www.whatwg.org/specs/web-apps/current-work/multipage/dom.html#dom-document-readystate
+	//readonly attribute DocumentReadyState readyState;
+	public var readyState( default, null ) : String; // can be "loading", "interactive", "complete"
+
+	/**
+	 * TODO The Document() constructor must return a new document whose origin is an alias to the origin of the global object's associated document, 
+	 * and effective script origin is an alias to the effective script origin of the global object's associated document.
+	 */
+	private function new()
 	{
 		super();
-		this.implementation = implementation;
 	}
 
-	//Element            createElement(in DOMString tagName)
-	public function createElement( tagName : DOMString ) : Element { };
-
-	//DocumentFragment   createDocumentFragment();
-	public function createDocumentFragment() : DocumentFragment { };
-
-	//Text               createTextNode(in DOMString data);
-	public function createTextNode( data : DOMString ) : Text { };
-
-	//Comment            createComment(in DOMString data);
-	public function createComment( data : DOMString ) : Comment { };
-
-	//CDATASection       createCDATASection(in DOMString data)
-										//raises(DOMException);
-	public function createCDATASection( data : DOMString ) : CDATASection { }
-
-	//ProcessingInstruction createProcessingInstruction(in DOMString target, 
-													//in DOMString data)
-										//raises(DOMException);
-	public function createProcessingInstruction( target : DOMString, data : DOMString ) : ProcessingInstruction { }
-
-	//Attr               createAttribute(in DOMString name)
-										//raises(DOMException);
-	public function createAttribute( name : DOMString ) : Attr { }
-
-	//EntityReference    createEntityReference(in DOMString name)
-										//raises(DOMException);
-	public function createEntityReference( name : DOMString ) : EntityReference { }
-
-	//NodeList           getElementsByTagName(in DOMString tagname);
-	public function getElementsByTagName( tagname : DOMString ) : NodeList { }
-
-	// Introduced in DOM Level 2:
-	//Node               importNode(in Node importedNode, 
-								//in boolean deep)
-										//raises(DOMException);
-	public function importNode( importedNode : Node, deep : Bool) : Node { }
-
-	// Introduced in DOM Level 2:
-	//Element            createElementNS(in DOMString namespaceURI, 
-									 //in DOMString qualifiedName)
-										//raises(DOMException);
-	public function createElementNS( namespaceURI : DOMString, qualifiedName : DOMString ) : Element { }
-
-	// Introduced in DOM Level 2:
-	//Attr               createAttributeNS(in DOMString namespaceURI, 
-									   //in DOMString qualifiedName)
-										//raises(DOMException);
-	public function createAttributeNS( namespaceURI : DOMString, qualifiedName : DOMString ) : Attr { }
-
-	// Introduced in DOM Level 2:
-	//NodeList           getElementsByTagNameNS(in DOMString namespaceURI, 
-											//in DOMString localName);
-	public function getElementsByTagNameNS( namespaceURI : DOMString, localName : DOMString ) : NodeList { }
-
-	// Introduced in DOM Level 2:
-	//Element            getElementById(in DOMString elementId);
-	public function getElementById( elementId : DOMString ) : Element { }
-
-	// Introduced in DOM Level 3:
-	//readonly attribute DOMString       inputEncoding;
-	public var inputEncoding( default, never ) : DocumentType;
-
-	// Introduced in DOM Level 3:
-	//readonly attribute DOMString       xmlEncoding;
-	public var xmlEncoding( default, never ) : DocumentType;
-
-	// Introduced in DOM Level 3:
-		   //attribute boolean         xmlStandalone;
-										// raises(DOMException) on setting
-	public var xmlStandalone : Bool;
-
-	// Introduced in DOM Level 3:
-		   //attribute DOMString       xmlVersion;
-										// raises(DOMException) on setting
-	public var xmlVersion : DOMString;
-
-	// Introduced in DOM Level 3:
-		   //attribute boolean         strictErrorChecking;
-	public var strictErrorChecking : Bool;
-
-	// Introduced in DOM Level 3:
-		   //attribute DOMString       documentURI;
-	public var documentURI : DOMString;
-
-	// Introduced in DOM Level 3:
-	//Node               adoptNode(in Node source)
-										//raises(DOMException);
-	public function adoptNode( source : Node ) : Node { }
-
-	// Introduced in DOM Level 3:
-	//readonly attribute DOMConfiguration domConfig;
-	public var domConfig : DOMConfiguration;
-
-	// Introduced in DOM Level 3:
-	//void               normalizeDocument();
-	public function normalizeDocument() : Void { }
-
-	// Introduced in DOM Level 3:
-	//Node               renameNode(in Node n, 
-								//in DOMString namespaceURI, 
-								//in DOMString qualifiedName)
-										//raises(DOMException);
-	public function renameNode( n : Node, namespaceURI : DOMString, qualifiedName : DOMString ) : Node { }
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementsbytagname
+	 */
+	public function getElementsByTagName( tagname : DOMString ) : HTMLCollection
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementsbytagnamens
+	 */
+	public function getElementsByTagNameNS( namespaceURI : Null<DOMString>, localName : DOMString ) : HTMLCollection
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementsbyclassname
+	 */
+	public function getElementsByClassName( classNames : DOMString ) : HTMLCollection
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementbyid
+	 */
+	public function getElementById( elementId : DOMString ) : Null<Element>
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createelement
+	 */
+	public function createElement( localName : DOMString ) : Element
+	{
+		if ( !DOMInternals.isValid( localName, "Name" ) )
+		{
+			throw "InvalidCharacterError";
+		}
+		//If the context object is an HTML document, let localName be converted to ASCII lowercase. 
+		localName = localName.toLowerCase(); // FIXME for the moment dominos support only HTML...
+		
+		var ne : Element = new Element( localName, DOMInternals.HTML_NAMESPACE );
+		
+		DOMInternals.setNodeDocument( ne, this );
+		
+		return ne;
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createelementns
+	 */
+	public function createElementNS( namespaceURI : Null<DOMString>, qualifiedName : DOMString ) : Element
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createdocumentfragment
+	 */
+	public function createDocumentFragment() : DocumentFragment
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createtextnode
+	 */
+	public function createTextNode( data : DOMString ) : Text
+	{
+		var t = new Text( data );
+		DOMInternals.setNodeDocument( t, this );
+		return t;
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createcomment
+	 */
+	public function createComment( data : DOMString ) : Comment
+	{
+		var c = new Comment();
+		c.data = data;
+		DOMInternals.setNodeDocument( c, this );
+		
+		return c;
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createprocessinginstruction
+	 */
+	public function createProcessingInstruction( target : DOMString, data : DOMString ) : ProcessingInstruction
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-importnode
+	 */
+	public function importNode( node : Node, ?deep : Bool = true) : Node
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-adoptnode
+	 */
+	public function adoptNode( node : Node ) : Node
+	{
+		return DOMInternals.adopt( node, this );
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createevent
+	 */
+	//Event createEvent(DOMString interface);
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createrange
+	 */
+	//Range createRange();
 	
-	// NEW
-	//void prepend((Node or DOMString)... nodes);
-	public function prepend( /* TODO */ ):Void
+	// NodeFilter.SHOW_ALL = 0xFFFFFFFF
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createnodeiterator
+	 */
+	//NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createtreewalker
+	 */
+	//TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+	
+	//
+	// PROPERTIES
+	//
+	
+	override public function get_nodeType() : Int
 	{
-		// TODO
+		return Node.DOCUMENT_NODE;
 	}
-	//void append((Node or DOMString)... nodes);
-	public function append( /* TODO */ ):Void
+	override public function get_nodeName() : DOMString
 	{
-		// TODO
+		throw "#document";
+	}
+	override public function get_ownerDocument() : Null<Document>
+	{
+		return null;
 	}
 }

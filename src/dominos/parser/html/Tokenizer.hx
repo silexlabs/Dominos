@@ -1,5 +1,7 @@
 package dominos.parser.html;
 
+import dominos.dom.Document;
+
 /**
  * The states of the Tokenizer machine.
  */
@@ -232,9 +234,6 @@ class CurrentDoctypeHelper
 /**
  * The Tokenizer class handles the tokenization of the HTML document.
  * 
- * TODO manage current tag token
- * 		manage doctype and comment token (when not consumed right after creation)
- * 
  * @see http://www.w3.org/TR/html5/syntax.html#tokenization
  * 
  * @author Thomas Fétiveau
@@ -257,11 +256,10 @@ class Tokenizer
 	/**
 	 * 
 	 */
-	public function new( is : InputStream, tb : TreeBuilder ) 
+	public function new( is : InputStream ) 
 	{
 		this.is = is;
-		
-		this.tb = tb;
+		this.tb = new TreeBuilder( is, this );
 	}
 	
 	/**
@@ -275,7 +273,7 @@ class Tokenizer
 	/**
 	 * 
 	 */
-	public function parse() : Void
+	public function parse() : Document
 	{
 		state = DATA;
 		
@@ -1877,5 +1875,6 @@ class Tokenizer
 					throw "ERROR: unknown Tokenizer state";
 			}
 		}
+		return tb.getDoc();
 	}
 }

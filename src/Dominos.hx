@@ -8,13 +8,5 @@ import dominos.parser.HTMLParser;
  */
 class Dominos
 {
-
-	static public function parse( str : String, mime : String ) 
-	{
-		if (mime != "text/html")
-		{
-			throw "Mime type "+mime+" not supported!";
-		}
-		var doc = HTMLParser.parse( str );
-	}
+	
 }

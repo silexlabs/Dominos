@@ -1,4 +1,4 @@
-package parser.html;
+package dominos.test.html;
 
 import utest.Assert;
 import utest.Runner;
@@ -10,11 +10,12 @@ import dominos.parser.html.InputStream;
  * ...
  * @author Thomas Fétiveau
  */
-class InputStreamTest
+class InputStreamTests
 {
-	public static function main() {
+	public static function main()
+	{
         var runner = new Runner();
-        runner.addCase(new InputStreamTest());
+        runner.addCase(new InputStreamTests());
         Report.create(runner);
         runner.run();
     }

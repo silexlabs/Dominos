@@ -16,10 +16,9 @@ class HTMLParser
 	static public function parse( data : String ) : Document
 	{
 		//var tokenizer = new Tokenizer( new InputStream( haxe.io.Bytes.ofString( data ) ) );
-		var tb = new TreeBuilder( new Tokenizer( new InputStream( data ) ) );
-		var domDoc = tb.parse();
-		trace("parsing finished");
-		trace("serialized result: "+domDoc);
+		var tb = new TreeBuilder();
+		var tok = new Tokenizer( new InputStream( data ), tb );
+		return tok.parse();
 	}
 
 	/**

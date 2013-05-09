@@ -1,4 +1,5 @@
 package dominos.dom;
+import dominos.html.HTMLCollection;
 
 /**
  * The Element interface represents an element in an HTML or XML document. 
@@ -12,73 +13,187 @@ package dominos.dom;
  * 
  * Documentation for this class was provided by <a href="https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#element">W3C</a>
  * 
+ * @see http://dom.spec.whatwg.org/#element
  * @author Thomas Fétiveau
  */
 class Element extends Node
 {
-	//TODO readonly attribute DOMString? namespaceURI;
-	//TODO readonly attribute DOMString? prefix;
-	//TODO readonly attribute DOMString localName;
-	//readonly attribute DOMString tagName;
-	public var tagName( default, never ) : DOMString;
-
-	//TODO attribute DOMString id;
-	//TODO attribute DOMString className;
-	//TODO readonly attribute DOMTokenList classList;
-
 	/**
-	 * The attributes attribute must return a read only array of the context object's attribute list. 
-	 * TODO The returned read only array must be live. I.e. changes to the associated attributes are reflected.
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-namespaceuri
+	 */
+	public var namespaceURI( default, null ) : Null<DOMString>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-prefix
+	 */
+	public var prefix( default, null ) : Null<DOMString>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-localname
+	 */
+	public var localName( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-tagname
+	 */
+	public var tagName( get, never ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-id
+	 */
+	public var id : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-classname
+	 */
+	public var className : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-classlist
+	 */
+	//TODO readonly attribute DOMTokenList classList;
+	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-attributes
 	 */
-	//readonly attribute Attr[] attributes;
-	public var attributes( default, never ) : Array<Attr>;
+	public var attributes( default, null ) : Array<Attr>;
 	
-	//DOMString? getAttribute(DOMString name);
-	public function getAttribute( name : DOMString ) : DOMString { }
-
-	//DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
-	public function getAttributeNS( namespaceURI : DOMString, localName : DOMString ) : DOMString { }
-
-	//void setAttribute(DOMString name, DOMString value);
-	public function setAttribute( name : DOMString , value : DOMString ) : Void { }
-	
-	//void setAttributeNS(DOMString? namespace, DOMString name, DOMString value);
-	public function setAttributeNS( namespaceURI : DOMString, qualifiedName : DOMString, value : DOMString ) : Void { }
-
-	//void removeAttribute(DOMString name);
-	public function removeAttribute( name : DOMString ) : Void { }
-
-	//void removeAttributeNS(DOMString? namespace, DOMString localName);
-	public function removeAttributeNS( namespaceURI : DOMString, localName : DOMString) : Void { }
-
-	//boolean hasAttribute(DOMString name);
-	public function hasAttribute( name : DOMString ) : Bool { }
-
-	//boolean hasAttributeNS(DOMString? namespace, DOMString localName);
-	public function hasAttributeNS( namespaceURI : DOMString, localName : DOMString ) : Bool { }
-
-	//HTMLCollection getElementsByTagName(DOMString localName);
-	public function getElementsByTagName( name : DOMString ) : NodeList { } // FIXME return HTMLCollection?
-
-	//HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-	public function getElementsByTagNameNS( namespaceURI : DOMString, localName : DOMString ) : NodeList { } // FIXME return HTMLCollection?
-	
-	//HTMLCollection getElementsByClassName(DOMString classNames);
-	public function getElementsByClassName( classNames : DOMString ) : NodeList { } // FIXME return HTMLCollection?
-
 	//TODO readonly attribute HTMLCollection children;
 	//TODO readonly attribute Element? firstElementChild;
 	//TODO readonly attribute Element? lastElementChild;
 	//TODO readonly attribute Element? previousElementSibling;
 	//TODO readonly attribute Element? nextElementSibling;
 	//TODO readonly attribute unsigned long childElementCount;
+	
+	@:allow(dominos.dom.Document.createElement)
+	private function new( localName : String, ?namespaceURI : Null<DOMString> = null, ?prefix : Null<DOMString> = null )
+	{
+		super();
+		this.attributes = [];
+		this.localName = localName;
+		this.namespaceURI = namespaceURI;
+		this.prefix = prefix;
+	}
+	
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getattribute
+	 */
+	public function getAttribute( name : DOMString ) : Null<DOMString>
+	{
+		//If the context object is in the HTML namespace and its node document is an HTML document, let name be converted to ASCII lowercase. 
+		var a : Null<Attr> = DOMInternals.firstAttr( this, name.toLowerCase() );
+		return (a != null) ? a.value : null;
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getattributens
+	 */
+	public function getAttributeNS( namespaceURI : Null<DOMString>, localName : DOMString ) : Null<DOMString>
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-setattribute
+	 */
+	public function setAttribute( name : DOMString , value : DOMString ) : Void
+	{
+		if ( !DOMInternals.isValid( name, "Name") )
+		{
+			throw "InvalidCharacterError";
+		}
+		//If the context object is in the HTML namespace and its node document is an HTML document, let name be converted to ASCII lowercase.
+		name = name.toLowerCase(); //FIXME one day Dominos could manage other formats than HTML
+		
+		var a : Null<Attr> = DOMInternals.firstAttr( this, name );
+		
+		if (a == null)
+		{
+			a = new Attr( name, value );
+			attributes.push( a );
+		}
+		else
+		{
+			//Not implemented: Queue a mutation record of "attributes" for context object with name attribute's local name, namespace attribute's namespace, and oldValue attribute's value.
+			
+			//Set attribute's value to value. 
+			a.value = value;
+		}
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-setattributens
+	 */
+	public function setAttributeNS( namespaceURI : DOMString, qualifiedName : DOMString, value : DOMString ) : Void
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-removeattribute
+	 */
+	public function removeAttribute( name : DOMString ) : Void
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-removeattributens
+	 */
+	public function removeAttributeNS( namespaceURI : DOMString, localName : DOMString) : Void
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-hasattribute
+	 */
+	public function hasAttribute( name : DOMString ) : Bool
+	{
+		return ( getAttribute(name) != null );
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-hasattributens
+	 */
+	public function hasAttributeNS( namespaceURI : DOMString, localName : DOMString ) : Bool
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getelementsbytagname
+	 */
+	public function getElementsByTagName( name : DOMString ) : HTMLCollection
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getelementsbytagnamens
+	 */
+	public function getElementsByTagNameNS( namespaceURI : DOMString, localName : DOMString ) : HTMLCollection
+	{
+		throw "Not implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getelementsbyclassname
+	 */
+	public function getElementsByClassName( classNames : DOMString ) : HTMLCollection
+	{
+		throw "Not implemented!";
+	}
 
-	// NEW
-	//TODO void prepend((Node or DOMString)... nodes);
-	//TODO void append((Node or DOMString)... nodes);
-	//TODO void before((Node or DOMString)... nodes);
-	//TODO void after((Node or DOMString)... nodes);
-	//TODO void replace((Node or DOMString)... nodes);
-	//TODO void remove();
+	//////////////////////////
+	// PROPERTIES
+	//////////////////////////
+	
+	public function get_tagName() : DOMString
+	{
+		//TODO If context object's namespace prefix is not null, let qualified name be its namespace prefix, followed by a ":" (U+003A), followed by its local name. 
+		//Otherwise, let qualified name be its local name. 
+		
+		//If the context object is in the HTML namespace and its node document is an HTML document, let qualified name be converted to ASCII uppercase. 
+		return localName.toUpperCase();
+	}
+	override public function get_nodeType() : Int
+	{
+		return Node.ELEMENT_NODE;
+	}
+	override public function get_nodeName() : DOMString
+	{
+		return tagName;
+	}
+	override public function get_textContent() : Null<DOMString>
+	{
+		throw "Not Implemented!";
+	}
+	override public function set_textContent( nv : DOMString ) : Null<DOMString>
+	{
+		throw "Not Implemented!";
+	}
 }

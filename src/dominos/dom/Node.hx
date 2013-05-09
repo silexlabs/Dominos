@@ -37,96 +37,240 @@ class Node extends EventTarget
 	public static inline var DOCUMENT_FRAGMENT_NODE : Int         = 11;
 	public static inline var NOTATION_NODE : Int                  = 12; // historical
 
-	//readonly attribute unsigned short   nodeType;
-	public var nodeType( default, never ) : Int;
+	// Document Position
+	static inline var DOCUMENT_POSITION_DISCONNECTED			= 0x01;
+	static inline var DOCUMENT_POSITION_PRECEDING				= 0x02;
+	static inline var DOCUMENT_POSITION_FOLLOWING				= 0x04;
+	static inline var DOCUMENT_POSITION_CONTAINS				= 0x08;
+	static inline var DOCUMENT_POSITION_CONTAINED_BY			= 0x10;
+	static inline var DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC	= 0x20;
 
-	//readonly attribute DOMString        nodeName;
-	public var nodeName( default, never ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-nodetype
+	 */
+	public var nodeType( get, never ) : Int;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-nodename
+	 */
+	public var nodeName( get, never ) : DOMString;
 
-	//TODO readonly attribute DOMString? baseURI;
+	//TODO? readonly attribute DOMString? baseURI;
 
-	//readonly attribute Document? ownerDocument;
-	public var ownerDocument( default, never ) : Document;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-ownerdocument
+	 */
+	public var ownerDocument( get, null ) : Null<Document>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-parentnode
+	 */
+	public var parentNode( default, null ) : Null<Node>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#parent-element
+	 */
+	public var parentElement( get, null ) : Null<Element>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-childnodes
+	 */
+	public var childNodes( default, null ) : NodeList;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-tree-first-child
+	 */
+	public var firstChild( get, never ) : Null<Node>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-lastchild
+	 */
+	public var lastChild( get, never ) : Null<Node>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-previoussibling
+	 */
+	public var previousSibling( get, never ) : Null<Node>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-nextsibling
+	 */
+	public var nextSibling( get, never ) : Null<Node>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-nodevalue
+	 */
+	public var nodeValue( get, set ) : Null<DOMString>;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-textcontent
+	 */
+	public var textContent( get, set ) : Null<DOMString>;
 
-	//readonly attribute Node             parentNode;
-	public var parentNode( default, never ) : Node;
-	
-	//TODO readonly attribute Element? parentElement;
-	
-	//readonly attribute NodeList         childNodes;
-	public var childNodes( default, never ) : NodeList;
-	
-	//readonly attribute Node             firstChild;
-	public var firstChild( default, never ) : Node;
-	
-	//readonly attribute Node             lastChild;
-	public var lastChild( default, never ) : Node;
-	
-	//readonly attribute Node             previousSibling;
-	public var previousSibling( default, never ) : Node;
-	
-	//readonly attribute Node             nextSibling;
-	public var nextSibling( default, never ) : Node;
-	
-	//attribute DOMString? nodeValue;
-	public var nodeValue:DOMString;
-	
-	//attribute DOMString? textContent;
-	public var textContent : DOMString;
-	
-	public function new()
+	/**
+	 * 
+	 */
+	private function new()
 	{
 		//init childNodes list
 		childNodes = [];
 	}
-	
-	//Node insertBefore(Node node, Node? child);
-	public function insertBefore( newChild:Node, refChild:Node ) : Node { }
-	
-	
-	//Node appendChild(Node node);
-	public function appendChild( newChild:Node ) : Node { }
-	
-	//Node replaceChild(Node node, Node child);
-	public function replaceChild( newChild:Node, oldChild:Node ) : Node { }
-	
-	//Node removeChild(Node child);
-	public function removeChild( oldChild:Node ) : Node { }
-	
-	//void normalize();
-	public function normalize() : Void {  }
-	
-	//Node cloneNode(optional boolean deep = true);
-	public function cloneNode( ?deep:Bool = true ) { }
-	
-	//boolean isEqualNode(Node? node);
-	public function isEqualNode( node : Node ) : Bool { }
-	
-		// DocumentPosition
-	//const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
-	static inline var DOCUMENT_POSITION_DISCONNECTED			= 0x01;
-	//const unsigned short      DOCUMENT_POSITION_PRECEDING    = 0x02;
-	static inline var DOCUMENT_POSITION_PRECEDING				= 0x02;
-	//const unsigned short      DOCUMENT_POSITION_FOLLOWING    = 0x04;
-	static inline var DOCUMENT_POSITION_FOLLOWING				= 0x04;
-	//const unsigned short      DOCUMENT_POSITION_CONTAINS     = 0x08;
-	static inline var DOCUMENT_POSITION_CONTAINS				= 0x08;
-	//const unsigned short      DOCUMENT_POSITION_CONTAINED_BY = 0x10;
-	static inline var DOCUMENT_POSITION_CONTAINED_BY			= 0x10;
-	//const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
-	static inline var DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC	= 0x20;
-	
-	//unsigned short compareDocumentPosition(Node other);
-	public function compareDocumentPosition( other : Node ) : Int { }
 
-	//TODO boolean contains(Node? other);
-
-	//DOMString? lookupPrefix(DOMString? namespace);
-	public function lookupPrefix( namespaceURI : DOMString ) : DOMString { }
-
-	//DOMString? lookupNamespaceURI(DOMString? prefix);
-	public function lookupNamespaceURI( prefix : DOMString ) : DOMString { }
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-haschildnodes
+	 */
+	public function hasChildNodes() : Bool
+	{
+		return (childNodes.length > 0);
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-insertbefore
+	 */
+	public function insertBefore( node:Node, child:Null<Node> ) : Node
+	{
+		return DOMInternals.preInsert( node, this, child );
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-appendchild
+	 */
+	public function appendChild( newChild:Node ) : Node
+	{
+		return DOMInternals.append( node, this );
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-replacechild
+	 */
+	public function replaceChild( newChild:Node, oldChild:Node ) : Node
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-removechild
+	 */
+	public function removeChild( child:Node ) : Node
+	{
+		return DOMInternals.preRemove( child, this );
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-normalize
+	 */
+	public function normalize() : Void
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-clonenode
+	 */
+	public function cloneNode( ?deep:Bool = true )
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-isequalnode
+	 */
+	public function isEqualNode( node : Node ) : Bool
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-comparedocumentposition
+	 */
+	public function compareDocumentPosition( other : Node ) : Int
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-contains
+	 */
+	public function contains( other : Null<Node> ) : Bool
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-lookupprefix
+	 */
+	public function lookupPrefix( namespaceURI : Null<DOMString> ) : Null<DOMString>
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-lookupnamespaceuri
+	 */
+	public function lookupNamespaceURI( prefix : Null<DOMString> ) : Null<DOMString>
+	{
+		throw "Not Implemented!";
+	}
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-isdefaultnamespace
+	 */
+	public function isDefaultNamespace( namespaceURI : Null<DOMString> ) : Bool
+	{
+		throw "Not Implemented!";
+	}
 	
-	//boolean isDefaultNamespace(DOMString? namespace);
-	public function isDefaultNamespace( namespaceURI : DOMString ) : Bool { }
+	////////////////////////////////////
+	// PROPERTIES
+	////////////////////////////////////
+	
+	public function get_nodeType() : Int
+	{
+		throw "Error: Unknown nodeType";
+	}
+	public function get_nodeName() : DOMString
+	{
+		throw "Error: Unknown nodeName";
+	}
+	public function get_ownerDocument() : Null<Document>
+	{
+		return ownerDocument;
+	}
+	public function get_parentElement() : Null<Element>
+	{
+		return ( parentNode.nodeType != Node.ELEMENT_NODE ) ? null : parentNode;
+	}
+	public function get_firstChild() : Null<Node>
+	{
+		return ( childNodes.length > 0 ) ? childNodes[0] : null;
+	}
+	public function get_lastChild() : Null<Node>
+	{
+		return ( childNodes.length > 0 ) ? childNodes[childNodes.length-1] : null;
+	}
+	public function get_previousSibling() : Null<Node>
+	{
+		return DOMInternals.previousSibling( this );
+	}
+	public function get_nextSibling() : Null<Node>
+	{
+		return DOMInternals.nextSibling( this );
+	}
+	public function get_nodeValue() : Null<DOMString>
+	{
+		return null;
+	}
+	public function set_nodeValue( nv : DOMString ) : Null<DOMString>
+	{
+		//Do nothing.
+		return null;
+	}
+	public function get_textContent() : Null<DOMString>
+	{
+		return null;
+	}
+	public function set_textContent( nv : DOMString ) : Null<DOMString>
+	{
+		//Do nothing.
+		return null;
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

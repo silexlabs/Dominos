@@ -11,11 +11,47 @@ package dominos.dom;
  * illegal in a comment per section 2.5 of [XML 1.0]. The presence of this character
  * sequence must generate a fatal error during serialization. 
  * 
- * Documentation for this class was provided by <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-1728279322">W3C</a>
+ * Documentation for this class was provided by <a href="https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#comment">W3C</a>
  * 
  * @author Thomas Fétiveau
  */
 class Comment extends CharacterData
 {
 	
+	@:allow(dominos.dom.Document.createComment);
+	private function new()
+	{
+		super();
+	}
+	
+	//////////////////////////////
+	// PROPERTIES
+	//////////////////////////////
+	
+	override public function get_nodeType() : Int
+	{
+		return Node.COMMENT_NODE;
+	}
+	override public function get_nodeName() : DOMString
+	{
+		throw "#comment";
+	}
+	override public function get_nodeValue() : Null<DOMString>
+	{
+		return data;
+	}
+	override public function set_nodeValue( nv : DOMString ) : Null<DOMString>
+	{
+		data = DOMInternals.replaceData( this, 0, length, nv );
+		return data;
+	}
+	override public function get_textContent() : Null<DOMString>
+	{
+		return data;
+	}
+	override public function set_textContent( nv : DOMString ) : Null<DOMString>
+	{
+		data = DOMInternals.replaceData( this, 0, length, nv );
+		return data;
+	}
 }

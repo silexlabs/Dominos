@@ -23,15 +23,62 @@ package dominos.dom;
  * 
  * Documentation for this class was provided by <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-1312295772">W3C</a>
  * 
+ * @see http://dom.spec.whatwg.org/#text
  * @author Thomas Fétiveau
  */
 class Text extends CharacterData
 {
-	//Text               splitText(in unsigned long offset)
-										//raises(DOMException);
-	public function splitText( offset : Int ) : Text { }
-
-	// Introduced in DOM Level 3:
-	//readonly attribute DOMString       wholeText;
+	/**
+	 * Returns the combined data of all direct Text node siblings. 
+	 */
 	public var wholeText( default, never ) : DOMString;
+	
+	/**
+	 * Returns a new Text node whose data is data. 
+	 */
+	@:allow(dominos.dom.Document.createTextNode);
+	private function new( ?data : DOMString = "" )
+	{
+		super();
+		this.data = data;
+	}
+	
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-text-splittext
+	 */
+	public function splitText( offset : Int ) : Text
+	{
+		throw "Not implemented";
+	}
+	
+	//////////////////
+	// PROPERTIES
+	//////////////////
+
+	override public function get_nodeType() : Int
+	{
+		return Node.TEXT_NODE;
+	}
+	override public function get_nodeName() : DOMString
+	{
+		throw "#test";
+	}
+	override public function get_nodeValue() : Null<DOMString>
+	{
+		return data;
+	}
+	override public function set_nodeValue( nv : DOMString ) : Null<DOMString>
+	{
+		data = DOMInternals.replaceData( this, 0, length, nv );
+		return data;
+	}
+	override public function get_textContent() : Null<DOMString>
+	{
+		return data;
+	}
+	override public function set_textContent( nv : DOMString ) : Null<DOMString>
+	{
+		data = DOMInternals.replaceData( this, 0, length, nv );
+		return data;
+	}
 }

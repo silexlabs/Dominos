@@ -20,20 +20,25 @@ class DocumentType extends Node
 	 * @param	?publicId
 	 * @param	?systemId
 	 */
-	public function new( name : DOMString, ?publicId : DOMString = "", ?systemId : DOMString = "" )
+	@:allow(dominos.dom.DOMImplementation.createDocumentType)
+	private function new( name : DOMString, ?publicId : DOMString = "", ?systemId : DOMString = "" )
 	{
 		super();
 		this.name = name;
 		this.publicId = publicId;
 		this.systemId = systemId;
 	}
-	// NEW
-	//void before((Node or DOMString)... nodes);
 	
-	//void after((Node or DOMString)... nodes);
+	//////////////////
+	// PROPERTIES
+	//////////////////
 	
-	//void replace((Node or DOMString)... nodes);
-	
-	//void remove();
-	
+	override public function get_nodeType() : Int
+	{
+		return Node.DOCUMENT_TYPE_NODE;
+	}
+	override public function get_nodeName() : DOMString
+	{
+		throw name;
+	}
 }

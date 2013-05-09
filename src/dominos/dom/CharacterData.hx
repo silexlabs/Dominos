@@ -12,42 +12,63 @@ package dominos.dom;
  * the term 16-bit units is used whenever necessary to indicate that indexing on 
  * CharacterData is done in 16-bit units.
  * 
- * Documentation for this class was provided by <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-FF21A306">W3C</a>
+ * Documentation for this class was provided by <a href="https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#characterdata">W3C</a>
  * 
  * @author Thomas Fétiveau
  */
 class CharacterData extends Node
 {
-	//attribute DOMString       data;
-								// raises(DOMException) on setting
-								// raises(DOMException) on retrieval
-	public var data : DOMString;
+	//[TreatNullAs=EmptyString] attribute DOMString data;
+	public var data(get, set) : DOMString;
 
 	//readonly attribute unsigned long   length;
-	public var length( default, never ) : Int;
+	public var length( get, never ) : Int;
 
-	//DOMString          substringData(in unsigned long offset, 
-						   //in unsigned long count)
-								//raises(DOMException);
-	public function substringData( offset : Int, count : Int ) : DOMString { }
+	//DOMString substringData(unsigned long offset, unsigned long count);
+	public function substringData( offset : Int, count : Int ) : DOMString
+	{
+		throw "Not implemented";
+	}
 
-	//void               appendData(in DOMString arg)
-								//raises(DOMException);
-	public function appendData( arg : DOMString ) : Void { }
+	//void appendData(DOMString data);
+	public function appendData( arg : DOMString ) : Void
+	{
+		throw "Not implemented";
+	}
 
-	//void               insertData(in unsigned long offset, 
-						//in DOMString arg)
-								//raises(DOMException);
-	public function insertData( offset : Int, arg : DOMString ) : Void { }
+	//void insertData(unsigned long offset, DOMString data);
+	public function insertData( offset : Int, arg : DOMString ) : Void
+	{
+		throw "Not implemented";
+	}
 
-	//void               deleteData(in unsigned long offset, 
-						//in unsigned long count)
-								//raises(DOMException);
-	public function deleteData( offset : Int, count : Int ) : Void { }
+	//void deleteData(unsigned long offset, unsigned long count);
+	public function deleteData( offset : Int, count : Int ) : Void
+	{
+		throw "Not implemented";
+	}
 
-	//void               replaceData(in unsigned long offset, 
-						 //in unsigned long count, 
-						 //in DOMString arg)
-								//raises(DOMException);
-	public function replaceData( offset : Int, count : Int, arg : DOMString ) : Void { }
+	//void replaceData(unsigned long offset, unsigned long count, DOMString data);
+	public function replaceData( offset : Int, count : Int, arg : DOMString ) : Void
+	{
+		throw "Not implemented";
+	}
+	
+	//
+	// PROPERTIES
+	//
+	
+	public function get_data() : DOMString;
+	{
+		return (data != null) ? data : "" ;
+	}
+	public function set_data( d : DOMString ) : DOMString;
+	{
+		data = (d != null) ? d : "" ;
+		return data;
+	}
+	public function get_length() : Int
+	{
+		return data.length;
+	}
 }

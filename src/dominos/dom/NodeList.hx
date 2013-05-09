@@ -7,15 +7,9 @@ package dominos.dom;
  * 
  * The items in the NodeList are accessible via an integral index, starting from 0.
  * 
- * Documentation for this class was provided by <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-536297177">W3C</a>
+ * Documentation for this class was provided by <a href="https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#nodelist">W3C</a>
  * 
+ * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#nodelist
  * @author Thomas Fétiveau
  */
-class NodeList
-{
-	//Node               item(in unsigned long index);
-	public function item( index : Int ) : Node { }
-	
-	//readonly attribute unsigned long   length;
-	public var length( default, never ) : Int;
-}
+typedef NodeList = Array<Node>;
