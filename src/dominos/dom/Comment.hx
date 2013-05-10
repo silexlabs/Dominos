@@ -18,7 +18,7 @@ package dominos.dom;
 class Comment extends CharacterData
 {
 	
-	@:allow(dominos.dom.Document.createComment);
+	@:allow(dominos.dom.Document.createComment)
 	private function new()
 	{
 		super();
@@ -34,7 +34,7 @@ class Comment extends CharacterData
 	}
 	override public function get_nodeName() : DOMString
 	{
-		throw "#comment";
+		return "#comment";
 	}
 	override public function get_nodeValue() : Null<DOMString>
 	{
@@ -42,7 +42,7 @@ class Comment extends CharacterData
 	}
 	override public function set_nodeValue( nv : DOMString ) : Null<DOMString>
 	{
-		data = DOMInternals.replaceData( this, 0, length, nv );
+		DOMInternals.replaceData( this, 0, length, nv );
 		return data;
 	}
 	override public function get_textContent() : Null<DOMString>
@@ -51,7 +51,7 @@ class Comment extends CharacterData
 	}
 	override public function set_textContent( nv : DOMString ) : Null<DOMString>
 	{
-		data = DOMInternals.replaceData( this, 0, length, nv );
+		DOMInternals.replaceData( this, 0, length, nv );
 		return data;
 	}
 }

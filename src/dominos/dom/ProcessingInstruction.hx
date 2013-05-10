@@ -32,7 +32,7 @@ class ProcessingInstruction extends CharacterData
 	}
 	override public function set_nodeValue( nv : DOMString ) : Null<DOMString>
 	{
-		data = DOMInternals.replaceData( this, 0, length, nv );
+		DOMInternals.replaceData( this, 0, length, nv );
 		return data;
 	}
 	override public function get_textContent() : Null<DOMString>
@@ -41,7 +41,7 @@ class ProcessingInstruction extends CharacterData
 	}
 	override public function set_textContent( nv : DOMString ) : Null<DOMString>
 	{
-		data = DOMInternals.replaceData( this, 0, length, nv );
+		DOMInternals.replaceData( this, 0, length, nv );
 		return data;
 	}
 }

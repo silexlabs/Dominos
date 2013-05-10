@@ -109,7 +109,8 @@ class CurrentTagHelper
 	var n : String;
 	var sc : Bool;
 	var attrs : Map<String,String>;
-	var ca : String;
+	var can : Null<String>;
+	var cav : Null<String>;
 	var e : Bool;
 	var lst : String;
 	public function new()
@@ -121,11 +122,16 @@ class CurrentTagHelper
 		n = s;
 		e = isEnd;
 		sc = false;
-		attrs = [];
+		attrs = new Map<String, String>();
 		can = null;
+		cav = null;
 	}
 	public function nextAttr( s : String ):Void
 	{
+		if ( can != null)
+		{
+			attrs.set( can, cav );
+		}
 		can = s;
 		cav = "";
 	}
@@ -241,20 +247,20 @@ class CurrentDoctypeHelper
 class Tokenizer
 {
 	/**
-	 * 
+	 * The associated Input Stream
 	 */
-	public var is(default,never) : InputStream;
+	private var is : InputStream;
 	/**
-	 * 
+	 * The associated Tree Builder
 	 */
-	private var tb(default,never) : TreeBuilder;
+	private var tb : TreeBuilder;
 	/**
-	 * 
+	 * Current Tokenizer state
 	 */
 	var state : State;
 
 	/**
-	 * 
+	 * Builds a new Tokenizer for a given Input Stream, which ends up in building a new Tree Builder.
 	 */
 	public function new( is : InputStream ) 
 	{
@@ -263,7 +269,7 @@ class Tokenizer
 	}
 	
 	/**
-	 * 
+	 * Allows the TreeBuilder to change Tokenizer state while parsing.
 	 */
 	public function switchState( s : State ) : Void
 	{
@@ -271,13 +277,13 @@ class Tokenizer
 	}
 
 	/**
-	 * 
+	 * Parse the document.
 	 */
 	public function parse() : Document
 	{
 		state = DATA;
 		
-		var c : Int;
+		var c : Int = 0; // avoids the compiler to complain about not initialized var. This initial value will never be used.
 		
 		var currentTag = new CurrentTagHelper();
 		
@@ -339,7 +345,7 @@ class Tokenizer
 							
 							tb.processToken( CHAR( 0xFFFD ) );
 						case -1: //EOF
-							tb.processToken( EOF )
+							tb.processToken( EOF );
 						case _:
 							tb.processToken( CHAR( c ) );
 					}
@@ -350,7 +356,7 @@ class Tokenizer
 					
 					if ( cr[0] == -2 ) // nothing returned
 					{
-						tb.processToken( CHAR('&') );
+						tb.processToken( CHAR('&'.code) );
 					}
 					else
 					{
@@ -369,7 +375,7 @@ class Tokenizer
 						case 0:
 							// TODO parse error
 							
-							tb.processToken( 0xFFFD );
+							tb.processToken( CHAR(0xFFFD) );
 						case -1: //EOF
 							tb.processToken( EOF );
 						case _:
@@ -385,7 +391,7 @@ class Tokenizer
 						case 0:
 							// TODO parse error
 							
-							tb.processToken( 0xFFFD );
+							tb.processToken( CHAR(0xFFFD) );
 						case -1: //EOF
 							tb.processToken( EOF );
 						case _:
@@ -399,7 +405,7 @@ class Tokenizer
 						case 0:
 							// TODO parse error
 							
-							tb.processToken( 0xFFFD );
+							tb.processToken( CHAR(0xFFFD) );
 						case -1:
 							tb.processToken( EOF );
 						case _:
@@ -430,7 +436,7 @@ class Tokenizer
 							state = DATA;
 							tb.processToken( CHAR('<'.code) );
 							//Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case END_TAG_OPEN:
 					c = is.nextInputChar();
@@ -454,7 +460,7 @@ class Tokenizer
 							tb.processToken( CHAR('<'.code) );
 							tb.processToken( CHAR('/'.code) );
 							// Reconsume the EOF
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							// TODO parse error
 							state = BOGUS_COMMENT;
@@ -480,7 +486,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character.
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							currentTag.appendToName( String.fromCharCode( c ) ); // WIP
 					}
@@ -496,7 +502,7 @@ class Tokenizer
 							state = RCDATA;
 							tb.processToken( CHAR( '<'.code ) );
 							//Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case RCDATA_END_TAG_OPEN:
 					c = is.nextInputChar();
@@ -516,7 +522,7 @@ class Tokenizer
 							tb.processToken( CHAR( '<'.code ) );
 							tb.processToken( CHAR( '/'.code ) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case RCDATA_END_TAG_NAME:
 					c = is.nextInputChar();
@@ -542,12 +548,13 @@ class Tokenizer
 							state = RCDATA;
 							tb.processToken( CHAR( '>'.code ) );
 							tb.processToken( CHAR( '/'.code ) );
-							for (tc in tempBuffer)
+							var tcs : String = tempBuffer.toString();
+							for (tci in 0...tcs.length)
 							{
-								tb.processToken( CHAR( tc ) );
+								tb.processToken( CHAR( tcs.charCodeAt(tci) ) );
 							}
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case RAWTEXT_LESS_THAN_SIGN:
 					c = is.nextInputChar();
@@ -561,7 +568,7 @@ class Tokenizer
 							state = RAWTEXT;
 							tb.processToken( CHAR('<'.code) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case RAWTEXT_END_TAG_OPEN:
 					c = is.nextInputChar();
@@ -581,7 +588,7 @@ class Tokenizer
 							tb.processToken( CHAR('<'.code) );
 							tb.processToken( CHAR('/'.code) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case RAWTEXT_END_TAG_NAME:
 					c = is.nextInputChar();
@@ -594,7 +601,7 @@ class Tokenizer
 							state = SELF_CLOSING_START_TAG;
 						case '>'.code if( currentTag.isAppropriate() ):
 							state = DATA;
-							tb.processToken( currentTag.tagToken( true ) );
+							tb.processToken( currentTag.generateToken() );
 						case x if ( x >= 'A'.code && x <= 'Z'.code ):
 							// Append the lowercase version of the current input character (add 0x0020 to the character's code point) to the current tag token's tag name
 							currentTag.appendToName( String.fromCharCode( c + 0x20 ) ); // WIP
@@ -607,12 +614,13 @@ class Tokenizer
 							state = RAWTEXT;
 							tb.processToken( CHAR('<'.code) );
 							tb.processToken( CHAR('/'.code) );
-							for (tc in tempBuffer)
+							var tcs : String = tempBuffer.toString();
+							for (tci in 0...tcs.length)
 							{
-								tb.processToken( CHAR( tc ) );
+								tb.processToken( CHAR( tcs.charCodeAt(tci) ) );
 							}
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_LESS_THAN_SIGN:
 					c = is.nextInputChar();
@@ -630,7 +638,7 @@ class Tokenizer
 							state = SCRIPT_DATA;
 							tb.processToken( CHAR( '<'.code ) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_END_TAG_OPEN:
 					c = is.nextInputChar();
@@ -642,7 +650,7 @@ class Tokenizer
 							tempBuffer.add(c);
 							state = SCRIPT_DATA_END_TAG_NAME;
 						case x if ( x >= 'a'.code && x <= 'z'.code ):
-							currentTag.nexTag( String.fromCharCode( c ), true ); // WIP
+							currentTag.nextTag( String.fromCharCode( c ), true ); // WIP
 							tempBuffer.add(c);
 							state = SCRIPT_DATA_END_TAG_NAME;
 						case _:
@@ -650,7 +658,7 @@ class Tokenizer
 							tb.processToken( CHAR( '<'.code ) );
 							tb.processToken( CHAR( '/'.code ) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_END_TAG_NAME:
 					c = is.nextInputChar();
@@ -676,12 +684,13 @@ class Tokenizer
 							state = SCRIPT_DATA;
 							tb.processToken( CHAR('<'.code) );
 							tb.processToken( CHAR('/'.code) );
-							for (tc in tempBuffer)
+							var tcs : String = tempBuffer.toString();
+							for (tci in 0...tcs.length)
 							{
-								tb.processToken( CHAR( tc ) );
+								tb.processToken( CHAR( tcs.charCodeAt(tci) ) );
 							}
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_ESCAPE_START:
 					c = is.nextInputChar();
@@ -694,7 +703,7 @@ class Tokenizer
 						case _:
 							state = SCRIPT_DATA;
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_ESCAPE_START_DASH:
 					c = is.nextInputChar();
@@ -707,7 +716,7 @@ class Tokenizer
 						case _:
 							state = SCRIPT_DATA;
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_ESCAPED:
 					c = is.nextInputChar();
@@ -721,12 +730,12 @@ class Tokenizer
 							state = SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
 						case 0:
 							//TODO parse error
-							tb.processToken( CHAR('0xFFFD'.code) );
+							tb.processToken( CHAR(0xFFFD) );
 						case -1:
 							state = DATA;
 							//TODO parse error
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							tb.processToken( CHAR( c ) );
 					}
@@ -743,12 +752,12 @@ class Tokenizer
 						case 0:
 							//TODO parse error
 							state = SCRIPT_DATA_ESCAPED;
-							tb.processToken( CHAR('0xFFFD'.code) );
+							tb.processToken( CHAR(0xFFFD) );
 						case -1:
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							state = SCRIPT_DATA_ESCAPED;
 							tb.processToken( CHAR( c ) );
@@ -768,12 +777,12 @@ class Tokenizer
 						case 0:
 							//TODO parse error
 							state = SCRIPT_DATA_ESCAPED;
-							tb.processToken( CHAR('0xFFFD'.code) );
+							tb.processToken( CHAR(0xFFFD) );
 						case -1:
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							state = SCRIPT_DATA_ESCAPED;
 							tb.processToken( CHAR( c ) );
@@ -802,7 +811,7 @@ class Tokenizer
 							state = SCRIPT_DATA_ESCAPED;
 							tb.processToken( CHAR( '<'.code ) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_ESCAPED_END_TAG_OPEN:
 					c = is.nextInputChar();
@@ -810,11 +819,11 @@ class Tokenizer
 					switch(c)
 					{
 						case x if ( x >= 'A'.code && x <= 'Z'.code ):
-							currentTag.nexTag( String.fromCharCode( c + 0x20 ), true ); // WIP
+							currentTag.nextTag( String.fromCharCode( c + 0x20 ), true ); // WIP
 							tempBuffer.add( c );
 							state = SCRIPT_DATA_ESCAPED_END_TAG_NAME;
 						case x if ( x >= 'a'.code && x <= 'z'.code ):
-							currentTag.nexTag( String.fromCharCode( c ), true ); // WIP
+							currentTag.nextTag( String.fromCharCode( c ), true ); // WIP
 							tempBuffer.add( c );
 							state = SCRIPT_DATA_ESCAPED_END_TAG_NAME;
 						case _:
@@ -822,7 +831,7 @@ class Tokenizer
 							tb.processToken( CHAR( '<'.code ) );
 							tb.processToken( CHAR( '/'.code ) );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_ESCAPED_END_TAG_NAME:
 					c = is.nextInputChar();
@@ -848,12 +857,12 @@ class Tokenizer
 							state = SCRIPT_DATA_ESCAPED;
 							tb.processToken( CHAR('<'.code) );
 							tb.processToken( CHAR('/'.code) );
-							for (tc in tempBuffer)
+							for (tc in tempBuffer.toString().split("")) // FIXME find something more efficient
 							{
-								tb.processToken( CHAR( tc ) );
+								tb.processToken( CHAR( tc.charCodeAt(0) ) ); // FIXME find something more efficient
 							}
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_DOUBLE_ESCAPE_START:
 					c = is.nextInputChar();
@@ -861,7 +870,7 @@ class Tokenizer
 					switch(c)
 					{
 						case 0x9, 0xA, 0xC, 0x20, '/'.code, '>'.code:
-							if (tempBuffer.toString == "script")
+							if (tempBuffer.toString() == "script")
 								state = SCRIPT_DATA_DOUBLE_ESCAPED;
 							else
 								state = SCRIPT_DATA_ESCAPED;
@@ -875,7 +884,7 @@ class Tokenizer
 						case _:
 							state = SCRIPT_DATA_ESCAPED;
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_DOUBLE_ESCAPED:
 					c = is.nextInputChar();
@@ -895,7 +904,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							tb.processToken( CHAR ( c ) );
 					}
@@ -918,7 +927,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							state = SCRIPT_DATA_DOUBLE_ESCAPED;
 							tb.processToken( CHAR ( c ) );
@@ -944,7 +953,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							state = SCRIPT_DATA_DOUBLE_ESCAPED;
 							tb.processToken( CHAR ( c ) );
@@ -961,15 +970,15 @@ class Tokenizer
 						case _:
 							state = SCRIPT_DATA_DOUBLE_ESCAPED;
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SCRIPT_DATA_DOUBLE_ESCAPE_END:
 					c = is.nextInputChar();
 					
-					switch(c)
+					switch( c )
 					{
 						case 0x9, 0xA, 0xC, 0x20, '/'.code, '>'.code:
-							if (tempBuffer.toString == "script")
+							if (tempBuffer.toString() == "script")
 								state = SCRIPT_DATA_ESCAPED;
 							else
 								state = SCRIPT_DATA_DOUBLE_ESCAPED;
@@ -983,7 +992,7 @@ class Tokenizer
 						case _:
 							state = SCRIPT_DATA_DOUBLE_ESCAPED;
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case BEFORE_ATTRIBUTE_NAME:
 					c = is.nextInputChar();
@@ -996,7 +1005,7 @@ class Tokenizer
 							state = SELF_CLOSING_START_TAG;
 						case '>'.code:
 							state = DATA;
-							tb.processToken( /* TODO manage end and start tokens in CurrentToken class */ );
+							tb.processToken( currentTag.generateToken() );
 						case x if ( x >= 'A'.code && x <= 'Z'.code ):
 							// Start a new attribute in the current tag token. 
 							// Set that attribute's name to the lowercase version of the current input character (add 0x0020 to the character's code point), 
@@ -1015,7 +1024,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							if (Lambda.has([0x22, 0x27, '<'.code, '='.code], c))// quotation mark, apostrophe, ...
 							{
@@ -1050,7 +1059,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							if (Lambda.has([0x22, 0x27, '<'.code], c))// quotation mark, apostrophe, ...
 							{
@@ -1096,7 +1105,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							if (Lambda.has([0x22, 0x27, '<'.code], c))// quotation mark, apostrophe, ...
 							{
@@ -1118,7 +1127,7 @@ class Tokenizer
 						case '&'.code:
 							state = ATTRIBUTE_VALUE_STATE( UNQUOTED );
 							// Reconsume the current input character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case 0x27: //apostrophe
 							state = ATTRIBUTE_VALUE_STATE( SINGLE_QUOTED );
 						case 0:
@@ -1134,7 +1143,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							if (Lambda.has(['<'.code, '='.code, 0x60], c))
 							{
@@ -1166,7 +1175,7 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							if ( q == UNQUOTED && Lambda.has([0x22, 0x27, 0x3C, 0x3D, 0x60], c) )
 							{
@@ -1209,12 +1218,12 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							state = BEFORE_ATTRIBUTE_NAME;
 							// Reconsume the character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case SELF_CLOSING_START_TAG:
 					c = is.nextInputChar();
@@ -1230,12 +1239,12 @@ class Tokenizer
 							//TODO parse error
 							state = DATA;
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							state = BEFORE_ATTRIBUTE_NAME;
 							// Reconsume the character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case BOGUS_COMMENT:
 					var cd = new StringBuf();
@@ -1257,7 +1266,7 @@ class Tokenizer
 					// If the end of the file was reached, reconsume the EOF character.
 					if ( c == -1 )
 					{
-						unconsume( 1 );
+						is.unconsume( 1 );
 					}
 				case MARKUP_DECLARATION_OPEN:
 					if ( is.consumeString("--") )
@@ -1301,7 +1310,7 @@ class Tokenizer
 							state = DATA;
 							tb.processToken( currentComment.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//Append the current input character to the comment token's data.
 							currentComment.appendToData( String.fromCharCode( c ) ); // WIP
@@ -1325,10 +1334,10 @@ class Tokenizer
 							tb.processToken( currentComment.generateToken() ); // WIP
 						case -1:
 							//TODO parse error
-							state = DATA
+							state = DATA;
 							tb.processToken( currentComment.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							// Append a "-" (U+002D) character and the current input character to the comment token's data.
 							currentComment.appendToData( String.fromCharCode(0x2D) + String.fromCharCode(c) ); // WIP
@@ -1350,7 +1359,7 @@ class Tokenizer
 							state = DATA;
 							tb.processToken( currentComment.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//Append the current input character to the comment token's data.
 							currentComment.appendToData( String.fromCharCode(c) ); // WIP
@@ -1372,7 +1381,7 @@ class Tokenizer
 							state = DATA;
 							tb.processToken( currentComment.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							// Append a "-" (U+002D) character and the current input character to the comment token's data
 							currentComment.appendToData( String.fromCharCode(0x2D) ); // WIP
@@ -1403,7 +1412,7 @@ class Tokenizer
 							state = DATA;
 							tb.processToken( currentComment.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Append two "-" (U+002D) characters and the current input character to the comment token's data.
@@ -1438,14 +1447,14 @@ class Tokenizer
 						case -1:
 							//TODO parse error
 							state = DATA;
-							tb.processToken( DOCTYPE( true ) );
+							tb.processToken( DOCTYPE( "", "", "", true ) );
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							state = BEFORE_DOCTYPE_NAME;
 							// Reconsume the character
-							unconsume( 1 );
+							is.unconsume( 1 );
 					}
 				case BEFORE_DOCTYPE_NAME:
 					c = is.nextInputChar();
@@ -1497,7 +1506,7 @@ class Tokenizer
 							// Emit that DOCTYPE token. 
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							// Append the current input character to the current DOCTYPE token's name.
 							currentDoctype.appendToName( String.fromCharCode( c ) ); // WIP
@@ -1520,7 +1529,7 @@ class Tokenizer
 							// Emit that DOCTYPE token. 
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							if ( is.consumeString("PUBLIC", false) )
 							{
@@ -1568,7 +1577,7 @@ class Tokenizer
 							// Emit that DOCTYPE token.
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Set the DOCTYPE token's force-quirks flag to on
@@ -1605,7 +1614,7 @@ class Tokenizer
 							// Emit that DOCTYPE token.
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Set the DOCTYPE token's force-quirks flag to on.
@@ -1639,7 +1648,7 @@ class Tokenizer
 							// Emit that DOCTYPE token.
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							// Append the current input character to the current DOCTYPE token's public identifier.
 							currentDoctype.appendToPid( String.fromCharCode( c ) ); // WIP
@@ -1672,7 +1681,7 @@ class Tokenizer
 							// Emit that DOCTYPE token. 
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Set the DOCTYPE token's force-quirks flag to on.
@@ -1706,7 +1715,7 @@ class Tokenizer
 							// Emit that DOCTYPE token. 
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Set the DOCTYPE token's force-quirks flag to on.
@@ -1745,7 +1754,7 @@ class Tokenizer
 							// Emit that DOCTYPE token.
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Set the DOCTYPE token's force-quirks flag to on.
@@ -1761,11 +1770,11 @@ class Tokenizer
 							//Ignore the character.
 						case 0x22:
 							// Set the DOCTYPE token's system identifier to the empty string (not missing)
-							currentDoctype.appendToSid("") // WIP
+							currentDoctype.appendToSid(""); // WIP
 							state = DOCTYPE_SYSTEM_IDENTIFIER( DOUBLE_QUOTED );
 						case 0x27:
 							// Set the DOCTYPE token's system identifier to the empty string (not missing)
-							currentDoctype.appendToSid("") // WIP
+							currentDoctype.appendToSid(""); // WIP
 							state = DOCTYPE_SYSTEM_IDENTIFIER( SINGLE_QUOTED );
 						case '>'.code:
 							//TODO parse error
@@ -1780,7 +1789,7 @@ class Tokenizer
 							// Emit that DOCTYPE token. 
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							// Set the DOCTYPE token's force-quirks flag to on.
@@ -1792,12 +1801,12 @@ class Tokenizer
 					
 					switch(c)
 					{
-						case x if ( x == 0x22 && q == DOUBLE_QUOTED || x == 0x27 && q == SINGLE_QUOTED ):
-							state = DOCTYPE_SYSTEM_IDENTIFIER;
+						case x if ( x == 0x22 && q.equals(DOUBLE_QUOTED) || x == 0x27 && q.equals(SINGLE_QUOTED) ):
+							state = DOCTYPE_SYSTEM_IDENTIFIER( q );
 						case 0:
 							//TODO parse error
 							// Append a U+FFFD REPLACEMENT CHARACTER character to the current DOCTYPE token's system identifier.
-							currentDoctype.appendToSid( String.fromCharCode( 0xFFFD ) ) // WIP
+							currentDoctype.appendToSid( String.fromCharCode( 0xFFFD ) ); // WIP
 						case '>'.code:
 							//TODO parse error
 							state = DATA;
@@ -1812,10 +1821,10 @@ class Tokenizer
 							// Emit that DOCTYPE token.
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							// Append the current input character to the current DOCTYPE token's system identifier.
-							currentDoctype.appendToSid( String.fromCharCode( c ) ) // WIP
+							currentDoctype.appendToSid( String.fromCharCode( c ) ); // WIP
 					}
 				case AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
 					c = is.nextInputChar();
@@ -1836,7 +1845,7 @@ class Tokenizer
 							// Emit that DOCTYPE token. 
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//TODO parse error
 							state = BOGUS_DOCTYPE; // This does not set the DOCTYPE token's force-quirks flag to on.
@@ -1855,7 +1864,7 @@ class Tokenizer
 							// Emit the DOCTYPE token.
 							tb.processToken( currentDoctype.generateToken() ); // WIP
 							// Reconsume the EOF character
-							unconsume( 1 );
+							is.unconsume( 1 );
 						case _:
 							//Ignore the character.
 					}
@@ -1869,10 +1878,10 @@ class Tokenizer
 					if ( is.currentInputChar() == -1 )
 					{
 						// reconsume the EOF character
-						unconsume( 1 );
+						is.unconsume( 1 );
 					}
-				case _:
-					throw "ERROR: unknown Tokenizer state";
+				//case _:
+					//throw "ERROR: unknown Tokenizer state";
 			}
 		}
 		return tb.getDoc();

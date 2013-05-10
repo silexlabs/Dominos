@@ -1,7 +1,5 @@
 package dominos.parser.html;
 
-import haxe.io.Bytes;
-
 using StringTools;
 
 /**
@@ -165,7 +163,7 @@ class InputStream
 			case x if( Lambda.has([-1, 0x9, 0xA, 0xC, 0x20, 0x3C, 0x26, additionalAllowedCharacter], x) ): // EOF, "tab", "LF", "FF", SPACE, '<', '&', additionalAllowedCharacter
 				return [-2]; //Not a character reference. No characters are consumed, and nothing is returned. (This is not an error, either.)
 			
-			case x if( x == 0x23): // '#' char
+			case 0x23: // '#' char
 				c = nextInputChar();
 				var isHexa : Bool = false;
 				if ( c == 0x58 || c == 0x78 ) // starts with 'x' or 'X'
@@ -221,7 +219,7 @@ class InputStream
 				//Otherwise, return a character token for the Unicode character whose code point is that number.
 				return [num];
 				
-			case x:
+			case _:
 				// consume chars until a match is found in namedCharRef()
 				var s : String = String.fromCharCode(c);
 				var possibleMatch : Bool = true;

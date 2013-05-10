@@ -7,6 +7,8 @@ package dominos.dom;
  */
 class DOMImplementation
 {
+	public function new() { }
+	
 	/**
 	 * Returns a doctype, with the given qualifiedName, publicId, and systemId. If qualifiedName does not match the Name production, 
 	 * an "InvalidCharacterError" exception is thrown, and if it does not match the QName production, a "NamespaceError" exception is thrown. 

@@ -48,11 +48,11 @@ class Node extends EventTarget
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-nodetype
 	 */
-	public var nodeType( get, never ) : Int;
+	public var nodeType( get, null ) : Int;
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-nodename
 	 */
-	public var nodeName( get, never ) : DOMString;
+	public var nodeName( get, null ) : DOMString;
 
 	//TODO? readonly attribute DOMString? baseURI;
 
@@ -125,14 +125,14 @@ class Node extends EventTarget
 	 */
 	public function appendChild( newChild:Node ) : Node
 	{
-		return DOMInternals.append( node, this );
+		return DOMInternals.append( newChild, this );
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-replacechild
 	 */
 	public function replaceChild( newChild:Node, oldChild:Node ) : Node
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return oldChild;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-removechild
@@ -151,51 +151,51 @@ class Node extends EventTarget
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-clonenode
 	 */
-	public function cloneNode( ?deep:Bool = true )
+	public function cloneNode( ?deep:Bool = true ) : Node
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-isequalnode
 	 */
 	public function isEqualNode( node : Node ) : Bool
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return false;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-comparedocumentposition
 	 */
 	public function compareDocumentPosition( other : Node ) : Int
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return 0;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-contains
 	 */
 	public function contains( other : Null<Node> ) : Bool
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return false;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-lookupprefix
 	 */
 	public function lookupPrefix( namespaceURI : Null<DOMString> ) : Null<DOMString>
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-lookupnamespaceuri
 	 */
 	public function lookupNamespaceURI( prefix : Null<DOMString> ) : Null<DOMString>
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-isdefaultnamespace
 	 */
 	public function isDefaultNamespace( namespaceURI : Null<DOMString> ) : Bool
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return false;
 	}
 	
 	////////////////////////////////////
@@ -204,11 +204,11 @@ class Node extends EventTarget
 	
 	public function get_nodeType() : Int
 	{
-		throw "Error: Unknown nodeType";
+		throw "Error: Unknown nodeType"; return nodeType;
 	}
 	public function get_nodeName() : DOMString
 	{
-		throw "Error: Unknown nodeName";
+		throw "Error: Unknown nodeName"; return nodeName;
 	}
 	public function get_ownerDocument() : Null<Document>
 	{
@@ -216,7 +216,7 @@ class Node extends EventTarget
 	}
 	public function get_parentElement() : Null<Element>
 	{
-		return ( parentNode.nodeType != Node.ELEMENT_NODE ) ? null : parentNode;
+		return ( parentNode.nodeType != Node.ELEMENT_NODE ) ? null : cast parentNode;
 	}
 	public function get_firstChild() : Null<Node>
 	{

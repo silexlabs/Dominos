@@ -1,18 +1,24 @@
 package dominos.dom;
 
 /**
- * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-doctype
+ * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#documenttype
  * 
  * @author Thomas Fétiveau
  */
 class DocumentType extends Node
 {
-	//readonly attribute DOMString name;
-	public var name( default, never ) : DOMString;
-	//readonly attribute DOMString publicId;
-	public var publicId( default, never ) : DOMString;
-	//readonly attribute DOMString systemId;
-	public var systemId( default, never ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-documenttype-name
+	 */
+	public var name( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-documenttype-publicid
+	 */
+	public var publicId( default, null ) : DOMString;
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-documenttype-systemid
+	 */
+	public var systemId( default, null ) : DOMString;
 
 	/**
 	 * When a doctype is created, its name is always given. Unless explicitly given when a doctype is created, its public ID and system ID are the empty string. 
@@ -39,6 +45,6 @@ class DocumentType extends Node
 	}
 	override public function get_nodeName() : DOMString
 	{
-		throw name;
+		return name;
 	}
 }

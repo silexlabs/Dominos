@@ -19,7 +19,7 @@ package dominos.dom;
 class CharacterData extends Node
 {
 	//[TreatNullAs=EmptyString] attribute DOMString data;
-	public var data(get, set) : DOMString;
+	@:isVar public var data(get, set) : DOMString;
 
 	//readonly attribute unsigned long   length;
 	public var length( get, never ) : Int;
@@ -27,7 +27,7 @@ class CharacterData extends Node
 	//DOMString substringData(unsigned long offset, unsigned long count);
 	public function substringData( offset : Int, count : Int ) : DOMString
 	{
-		throw "Not implemented";
+		throw "Not implemented"; return null;
 	}
 
 	//void appendData(DOMString data);
@@ -54,18 +54,18 @@ class CharacterData extends Node
 		throw "Not implemented";
 	}
 	
-	//
+	////////////////////
 	// PROPERTIES
-	//
+	////////////////////
 	
-	public function get_data() : DOMString;
+	public function get_data() : DOMString
 	{
 		return (data != null) ? data : "" ;
 	}
-	public function set_data( d : DOMString ) : DOMString;
+	public function set_data( d : String ) : DOMString
 	{
-		data = (d != null) ? d : "" ;
-		return data;
+		data = d;
+		return (data != null) ? data : "" ;
 	}
 	public function get_length() : Int
 	{

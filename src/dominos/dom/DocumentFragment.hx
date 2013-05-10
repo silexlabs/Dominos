@@ -15,14 +15,14 @@ class DocumentFragment extends Node
 	}
 	override public function get_nodeName() : DOMString
 	{
-		throw "#document-fragment";
+		return "#document-fragment";
 	}
 	override public function get_textContent() : Null<DOMString>
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 	override public function set_textContent( nv : DOMString ) : Null<DOMString>
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 }

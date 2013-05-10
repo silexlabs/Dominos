@@ -82,7 +82,7 @@ class Element extends Node
 	 */
 	public function getAttributeNS( namespaceURI : Null<DOMString>, localName : DOMString ) : Null<DOMString>
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-setattribute
@@ -144,28 +144,28 @@ class Element extends Node
 	 */
 	public function hasAttributeNS( namespaceURI : DOMString, localName : DOMString ) : Bool
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return false;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getelementsbytagname
 	 */
 	public function getElementsByTagName( name : DOMString ) : HTMLCollection
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return [];
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getelementsbytagnamens
 	 */
 	public function getElementsByTagNameNS( namespaceURI : DOMString, localName : DOMString ) : HTMLCollection
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return [];
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-getelementsbyclassname
 	 */
 	public function getElementsByClassName( classNames : DOMString ) : HTMLCollection
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return [];
 	}
 
 	//////////////////////////
@@ -190,10 +190,10 @@ class Element extends Node
 	}
 	override public function get_textContent() : Null<DOMString>
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 	override public function set_textContent( nv : DOMString ) : Null<DOMString>
 	{
-		throw "Not Implemented!";
+		throw "Not Implemented!"; return null;
 	}
 }

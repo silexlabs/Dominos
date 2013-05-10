@@ -36,7 +36,7 @@ class Text extends CharacterData
 	/**
 	 * Returns a new Text node whose data is data. 
 	 */
-	@:allow(dominos.dom.Document.createTextNode);
+	@:allow(dominos.dom.Document.createTextNode)
 	private function new( ?data : DOMString = "" )
 	{
 		super();
@@ -48,7 +48,7 @@ class Text extends CharacterData
 	 */
 	public function splitText( offset : Int ) : Text
 	{
-		throw "Not implemented";
+		throw "Not implemented"; return this;
 	}
 	
 	//////////////////
@@ -61,7 +61,7 @@ class Text extends CharacterData
 	}
 	override public function get_nodeName() : DOMString
 	{
-		throw "#test";
+		return "#test";
 	}
 	override public function get_nodeValue() : Null<DOMString>
 	{
@@ -69,7 +69,7 @@ class Text extends CharacterData
 	}
 	override public function set_nodeValue( nv : DOMString ) : Null<DOMString>
 	{
-		data = DOMInternals.replaceData( this, 0, length, nv );
+		DOMInternals.replaceData( this, 0, length, nv );
 		return data;
 	}
 	override public function get_textContent() : Null<DOMString>
@@ -78,7 +78,7 @@ class Text extends CharacterData
 	}
 	override public function set_textContent( nv : DOMString ) : Null<DOMString>
 	{
-		data = DOMInternals.replaceData( this, 0, length, nv );
+		DOMInternals.replaceData( this, 0, length, nv );
 		return data;
 	}
 }

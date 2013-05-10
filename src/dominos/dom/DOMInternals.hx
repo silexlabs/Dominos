@@ -8,19 +8,44 @@ package dominos.dom;
 @:allow(dominos.dom)
 class DOMInternals
 {
+	////////////////////////
+	// CONSTANTS
+	////////////////////////
+	
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#html-namespace
 	 */
-	static var HTML_NAMESPACE : String = "http://www.w3.org/1999/xhtml";
+	static inline var HTML_NAMESPACE : String = "http://www.w3.org/1999/xhtml";
+	
+	/**
+	 * HTML Elements tag names. TODO complete
+	 */
+	static inline var HTML_HTML_ELEMENT_TAGNAME : String = "html";
+	static inline var HTML_HEAD_ELEMENT_TAGNAME : String = "head";
+	static inline var HTML_TITLE_ELEMENT_TAGNAME : String = "title";
+	static inline var HTML_BASE_ELEMENT_TAGNAME : String = "base";
+	static inline var HTML_LINK_ELEMENT_TAGNAME : String = "link";
+	static inline var HTML_META_ELEMENT_TAGNAME : String = "meta";
+	static inline var HTML_STYLE_ELEMENT_TAGNAME : String = "style";
+	static inline var HTML_SCRIPT_ELEMENT_TAGNAME : String = "script";
+	static inline var HTML_NOSCRIPT_ELEMENT_TAGNAME : String = "noscript";
+	static inline var HTML_BODY_ELEMENT_TAGNAME : String = "body";
+	static inline var HTML_ARTICLE_ELEMENT_TAGNAME : String = "article";
+	static inline var HTML_SECTION_ELEMENT_TAGNAME : String = "section";
+	static inline var HTML_NAV_ELEMENT_TAGNAME : String = "nav";
+	
+	////////////////////////
+	// METHODS
+	////////////////////////
 	
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-cd-replace
 	 * FIXME temporary implementation, need to check more precisely what would be useful to Dominos from the specs
 	 */
-	static private function replaceData( node : CharacterData, offset : Int, count : IntIterator, data : DOMString ) : Void
+	static private function replaceData( node : CharacterData, offset : Int, count : Int, data : DOMString ) : Void
 	{
 		var l = node.length;
-		if ( offset > length )
+		if ( offset > l )
 		{
 			throw "IndexSizeError";
 		}
@@ -41,9 +66,9 @@ class DOMInternals
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-node-append
 	 */
-	static private function append( node : Node, parent : Node ) : Void
+	static private function append( node : Node, parent : Node ) : Node
 	{
-		preInsert( node, parent, null );
+		return preInsert( node, parent, null );
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-node-pre-insert
@@ -154,6 +179,7 @@ class DOMInternals
 	 * Set a node's node document.
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-node-document
 	 */
+	@:access(dominos.dom.Node.ownerDocument)
 	static private function setNodeDocument( node : Node, ownerDocument : Document ) : Void
 	{
 		node.ownerDocument = ownerDocument;

@@ -1,4 +1,5 @@
 package dominos.dom;
+
 import dominos.html.HTMLCollection;
 
 /**
@@ -17,8 +18,8 @@ import dominos.html.HTMLCollection;
 class Document extends Node
 {
 	//Possible compat modes
-	static private inline COMPAT_QUIRKS : String = "BackCompat";
-	static private inline COMPAT_NO_OR_LIMITIED_QUIRKS : String = "CSS1Compat";
+	static private inline var COMPAT_QUIRKS : String = "BackCompat";
+	static private inline var COMPAT_NO_OR_LIMITIED_QUIRKS : String = "CSS1Compat";
 	
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-implementation
@@ -72,28 +73,28 @@ class Document extends Node
 	 */
 	public function getElementsByTagName( tagname : DOMString ) : HTMLCollection
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return [];
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementsbytagnamens
 	 */
 	public function getElementsByTagNameNS( namespaceURI : Null<DOMString>, localName : DOMString ) : HTMLCollection
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return [];
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementsbyclassname
 	 */
 	public function getElementsByClassName( classNames : DOMString ) : HTMLCollection
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return [];
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementbyid
 	 */
 	public function getElementById( elementId : DOMString ) : Null<Element>
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createelement
@@ -107,7 +108,12 @@ class Document extends Node
 		//If the context object is an HTML document, let localName be converted to ASCII lowercase. 
 		localName = localName.toLowerCase(); // FIXME for the moment dominos support only HTML...
 		
-		var ne : Element = new Element( localName, DOMInternals.HTML_NAMESPACE );
+		var ne : Element = new Element( localName, DOMInternals.HTML_NAMESPACE ); // FIXME implement HTML element interfaces
+		
+		//switch ( localName )
+		//{
+			//case 
+		//}
 		
 		DOMInternals.setNodeDocument( ne, this );
 		
@@ -118,14 +124,14 @@ class Document extends Node
 	 */
 	public function createElementNS( namespaceURI : Null<DOMString>, qualifiedName : DOMString ) : Element
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createdocumentfragment
 	 */
 	public function createDocumentFragment() : DocumentFragment
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createtextnode
@@ -152,14 +158,14 @@ class Document extends Node
 	 */
 	public function createProcessingInstruction( target : DOMString, data : DOMString ) : ProcessingInstruction
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-importnode
 	 */
 	public function importNode( node : Node, ?deep : Bool = true) : Node
 	{
-		throw "Not implemented!";
+		throw "Not implemented!"; return null;
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-adoptnode
@@ -187,9 +193,9 @@ class Document extends Node
 	 */
 	//TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
 	
-	//
+	//////////////////////////////////
 	// PROPERTIES
-	//
+	//////////////////////////////////
 	
 	override public function get_nodeType() : Int
 	{
@@ -197,7 +203,7 @@ class Document extends Node
 	}
 	override public function get_nodeName() : DOMString
 	{
-		throw "#document";
+		return "#document";
 	}
 	override public function get_ownerDocument() : Null<Document>
 	{
