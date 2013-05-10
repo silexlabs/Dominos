@@ -311,11 +311,11 @@ class TreeBuilder
 	 */
 	@:access(dominos.dom)
 	public function processToken( t : Token, ?utrf : Null<InsertionMode> = null ) : TokenProcessRet
-	{ trace("utrf null? "+(utrf==null));
+	{ //trace("utrf null? "+(utrf==null));
 		// @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
 		var m = ( utrf != null && Lambda.exists( [IN_HEAD, IN_BODY, IN_TABLE, IN_SELECT], function(v:InsertionMode) { return Type.enumEq(utrf, v); } ) ) ? utrf : im;
 		// @see http://www.w3.org/TR/html5/syntax.html#acknowledge-self-closing-flag
-		var ack = false; trace("m ? "+(m.getName()));
+		var ack = false; //trace("m ? "+(m.getName()));
 		switch ( m )
 		{
 			case INITIAL:
@@ -357,10 +357,10 @@ class TreeBuilder
 						doc.appendChild( dt );
 						//And associate it with the Document object
 						doc.doctype = dt;
-						
+
 						if ( forceQuirks || name != "html" || 
 							publicId != null && (Lambda.exists(getPublicIdsStartWith(), function(pi:String) { return publicId.toLowerCase().indexOf(pi.toLowerCase()) == 0; } ) || Lambda.exists(["-//W3O//DTD W3 HTML Strict 3.0//EN//", "-/W3C/DTD HTML 4.0 Transitional/EN", "HTML"], function(pi:String) { return pi.toLowerCase() == publicId.toLowerCase(); } )) || 
-							systemId.toLowerCase() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd" ||
+							systemId != null && systemId.toLowerCase() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd" ||
 							systemId == null && (publicId!=null && Lambda.exists( ["-//W3C//DTD HTML 4.01 Frameset//", "-//W3C//DTD HTML 4.01 Transitional//"], function(pi:String){ return publicId.toLowerCase().indexOf(pi.toLowerCase()) == 0; } )) )
 						{
 							//set the Document to quirks mode
@@ -580,7 +580,7 @@ class TreeBuilder
 						framesetOK = true;
 						processToken(t);
 				}
-			case IN_BODY:
+			case IN_BODY: //trace( "Token = "+t.getName() + "  with: " + t.getParameters() );
 				switch (t)
 				{
 					case CHAR(0):
@@ -713,8 +713,9 @@ class TreeBuilder
 					case START_TAG("li", _, _):
 						framesetOK = false;
 						
-						var i = stack.length;
-						while (i-- > 0)
+						var i = stack.length - 1;
+						//while (i-- > 0) Crash on Neko
+						while (i > 0)
 						{
 							if ( stack[i].nodeName.toLowerCase() == "li" )
 							{
@@ -726,6 +727,7 @@ class TreeBuilder
 							{
 								break;
 							}
+							i--;
 						}
 						if (isEltInButtonScope(["p"]))
 						{
@@ -735,8 +737,8 @@ class TreeBuilder
 					case START_TAG("dd", _, _) | START_TAG("dt", _, _):
 						framesetOK = false;
 						
-						var i = stack.length;
-						while (i-- > 0)
+						var i = stack.length - 1;
+						while (i > 0)
 						{
 							if ( stack[i].nodeName.toLowerCase() == "dd" || stack[i].nodeName.toLowerCase() == "dt" )
 							{
@@ -748,6 +750,7 @@ class TreeBuilder
 							{
 								break;
 							}
+							i--;
 						}
 						if (isEltInButtonScope(["p"]))
 						{
@@ -789,14 +792,16 @@ class TreeBuilder
 							{
 								//TODO parse error
 							}
-							var i = stack.length; var found = false;
-							while ( i-- >= 0 && !found )
+							var i = stack.length - 1; var found = false;
+							//while ( i-- >= 0 && !found ) Does'nt work on Neko
+							while ( i >= 0 && !found )
 							{
 								if ( stack[i].nodeName.toLowerCase() == tg )
 								{
 									found = true;
 								}
 								stack.pop();
+								i--;
 							}
 						}
 					case END_TAG( "form", _, _ ):
@@ -816,9 +821,9 @@ class TreeBuilder
 							}
 							stack.remove( node );
 						}
-					case END_TAG( "p", _, _ ): trace("END TAG p processing !");
+					case END_TAG( "p", _, _ ):
 						if (!isEltInButtonScope(["p"]))
-						{ trace("isEltInButtonScope :( "+stack);
+						{
 							//TODO parse error
 							processToken( START_TAG("p", false, new Map()) );
 							processToken(t);
@@ -830,14 +835,16 @@ class TreeBuilder
 							{
 								//TODO parse error
 							}
-							var i = stack.length; var found = false;
-							while ( i-- >= 0 && !found)
+							var i = stack.length - 1; var found = false;
+							//while ( i-- >= 0 && !found)
+							while ( i >= 0 && !found)
 							{
 								if ( stack[i].nodeName.toLowerCase() == "p" )
 								{
-									found = true; trace("stack cleant after p tag");
+									found = true;
 								}
 								stack.pop();
+								i--;
 							}
 						}
 					case END_TAG( "li", _, _ ):
@@ -853,14 +860,16 @@ class TreeBuilder
 							{
 								//TODO parse error
 							}
-							var i = stack.length; var found = false;
-							while ( i-- >= 0 && !found )
+							var i = stack.length - 1; var found = false;
+							//while ( i-- >= 0 && !found )
+							while ( i >= 0 && !found )
 							{
 								if ( stack[i].nodeName.toLowerCase() == "li" )
 								{
 									found = true;
 								}
 								stack.pop();
+								i--;
 							}
 						}
 					case END_TAG( tg, _, _ ) if (tg == "dd" || tg == "dt"):
@@ -876,14 +885,16 @@ class TreeBuilder
 							{
 								//TODO parse error
 							}
-							var i = stack.length; var found = false;
-							while ( i-- >= 0 && !found )
+							var i = stack.length - 1; var found = false;
+							//while ( i-- >= 0 && !found )
+							while ( i >= 0 && !found )
 							{
 								if ( stack[i].nodeName.toLowerCase() == tg )
 								{
 									found = true;
 								}
 								stack.pop();
+								i--;
 							}
 						}
 					case END_TAG( tg, _, _ ) if (tg == "h1" || tg == "h2" || tg == "h3" || tg == "h4" || tg == "h5" || tg == "h6"):
@@ -899,32 +910,36 @@ class TreeBuilder
 							{
 								//TODO parse error
 							}
-							var i = stack.length; var found = false;
-							while ( i-- >= 0 && !found )
+							var i = stack.length - 1; var found = false;
+							//while ( i-- >= 0 && !found )
+							while ( i >= 0 && !found )
 							{
 								if ( Lambda.exists(["h1", "h2", "h3", "h4", "h5", "h6"], function(e) { return stack[i].nodeName.toLowerCase() == e; } ) )
 								{
 									found = true;
 								}
 								stack.pop();
+								i--;
 							}
 						}
 					case START_TAG( "a", _, _ ):
-						var i = lafe.length;
-						while ( i-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[i].e.nodeName.toLowerCase()) )
+						var i : Int = lafe.length - 1;
+						//while ( i-- >= 0 ) doesn't work on Neko (i-- is done after the test)
+						while ( i >= 0 && !Lambda.has( scopeMarkersList(), lafe[i].e.nodeName.toLowerCase() ) )
 						{
 							if ( lafe[i].e.nodeName.toLowerCase() == "a" )
 							{
-								var e = lafe[i];
+								var fe = lafe[i];
 								//TODO parse error
 								processToken( END_TAG("a", false, new Map()) );
-								if ( e.e.nodeName.toLowerCase() == "a" ) // check if still there
+								if ( fe.e.nodeName.toLowerCase() == "a" ) // check if still there
 								{
-									lafe.remove(e);
-									stack.remove(cast e.e);
+									lafe.remove( fe );
+									stack.remove( cast fe.e );
 								}
 								i = 0; // quit the loop
 							}
+							i--;
 						}
 						reconstructActiveFormattingElements();
 						lafe.push( { e:insertHTMLElement( t ), t:t } );
@@ -946,13 +961,15 @@ class TreeBuilder
 						{
 							oc++;
 							var fe : ActiveFormattingElt = null;
-							var fei = lafe.length;
-							while ( fe == null && fei-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[fei].e.nodeName.toLowerCase()) )
+							var fei = lafe.length - 1;
+							//while ( fe == null && fei-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[fei].e.nodeName.toLowerCase()) )
+							while ( fe == null && fei >= 0 && !Lambda.has( scopeMarkersList(), lafe[fei].e.nodeName.toLowerCase()) )
 							{
 								if ( lafe[fei].e.nodeName.toLowerCase() == tg )
 								{
 									fe = lafe[fei];
 								}
+								fei--;
 							}
 							//If there is no such node, then abort these steps and instead act as described in the "any other end tag" entry below.
 							if ( fe == null )
@@ -982,13 +999,15 @@ class TreeBuilder
 							//Let the furthest block be the topmost node in the stack of open elements that is lower in the stack than the formatting element,
 							//and is an element in the special category. There might not be one.
 							var fb : Element = null;
-							var fbi = Lambda.indexOf( stack, cast fe.e );
-							while ( fbi++ < stack.length && fb == null )
+							var fbi = Lambda.indexOf( stack, cast fe.e ) + 1;
+							//while ( fbi++ < stack.length && fb == null ) // doesn't work on Neko
+							while ( fbi < stack.length && fb == null )
 							{
 								if ( Lambda.has(specials(), stack[fbi].nodeName.toLowerCase()) )
 								{
 									fb = stack[fbi];
 								}
+								fbi++;
 							}
 							// If there is no furthest block, then the UA must first pop all the nodes from the bottom of the stack of open elements, from the 
 							// current node up to and including the formatting element, then remove the formatting element from the list of active formatting 
@@ -1032,9 +1051,10 @@ class TreeBuilder
 									//Create an element for the token for which the element node was created, replace the entry for node in the list of active formatting 
 									//elements with an entry for the new element, replace the entry for node in the stack of open elements with an entry for the new element, 
 									//and let node be the new element.
-									var li = lafe.length;
+									var li = lafe.length - 1;
 									var found = false;
-									while (!found && li-- >= 0)
+									//while (!found && li-- >= 0) Doesn't work on Neko
+									while (!found && li >= 0)
 									{
 										if (lafe[li].e == n)
 										{
@@ -1044,6 +1064,7 @@ class TreeBuilder
 											n = e;
 											found = true;
 										}
+										li--;
 									}
 									//If last node is the furthest block, then move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
 									if (fb == ln)
@@ -1308,7 +1329,8 @@ class TreeBuilder
 									//TODO parse error
 								}
 								//Pop all the nodes from the current node up to node, including node, then stop these steps.
-								stack = stack.slice(0, Lambda.indexOf(stack, cast n));
+								stack = stack.slice(0, Lambda.indexOf(stack, n));
+								return VOID;
 							}
 							else if (Lambda.has(specials(),n.nodeName.toLowerCase()))
 							{
@@ -1321,7 +1343,7 @@ class TreeBuilder
 			case TEXT:
 				switch (t)
 				{
-					case CHAR( c ) if (c == 0x9 || c == 0xA || c == 0xC || c == 0xD || c == 0x20):
+					case CHAR(_):
 						insertChar( currentNode(), t );
 						//Note: This can never be a U+0000 NULL character; the tokenizer converts those to U+FFFD REPLACEMENT CHARACTER characters.
 					case EOF:
@@ -1335,7 +1357,7 @@ class TreeBuilder
 						processToken( t );
 					case END_TAG( "script", _, _ ):
 						//TODO Provide a stable state. @see http://www.w3.org/TR/html5/webappapis.html#provide-a-stable-state
-						
+						trace("WARNING: TEXT INSERTION MODE / END_TAG('script') NOT IMPLEMENTED !!!");
 						var s = currentNode();
 						stack.pop();
 						im = om;
@@ -1346,7 +1368,7 @@ class TreeBuilder
 						stack.pop();
 						im = om;
 					case _:
-						throw "Error: unexpected Token";
+						throw "Error: unexpected Token: "+t.getName();
 				}
 			case IN_TABLE:
 				switch (t)
@@ -2092,9 +2114,9 @@ class TreeBuilder
 	function fosterParent( e : Element ) : Void
 	{
 		e.parentNode.removeChild(e);
-		var i = stack.length;
+		var i = stack.length - 1;
 		var f : Element = null;
-		while ( i-- >= 0 && f == null )
+		while ( i >= 0 && f == null )
 		{
 			if (stack[i].nodeName.toLowerCase() == "table")
 			{
@@ -2109,6 +2131,7 @@ class TreeBuilder
 					return;
 				}
 			}
+			i--;
 		}
 		if (f == null)
 		{
@@ -2142,8 +2165,8 @@ class TreeBuilder
 	 */
 	function isEltInSpecificScope ( eltTagNames : Array<String>, list : Array<String> ) : Bool
 	{
-		var i = stack.length;
-		while ( i-- > 0 )
+		var i = stack.length - 1;
+		while ( i > 0 )
 		{// trace( "stack[i].nodeName= "+stack[i].nodeName.toLowerCase() ); trace( "eltTagNames= "+eltTagNames ); trace( "list= "+list );
 			if ( Lambda.exists( eltTagNames, function(e) { return e == stack[i].nodeName.toLowerCase(); }) ) // FIXME temp fix toLowerCase() but here might be something cleaner
 			{
@@ -2153,6 +2176,7 @@ class TreeBuilder
 			{
 				return false;
 			}
+			i--;
 		}
 		return false;
 	}
@@ -2241,8 +2265,9 @@ class TreeBuilder
 			stack.push(ne);
 			//Replace the entry for entry in the list with an entry for new element.
 			lafe[lafe.length - ei] = { e:ne, t:lafe[lafe.length - ei].t };
+			ei--;
 		}
-		while (ei-- >= 1); //If the entry for new element in the list of active formatting elements is not the last entry in the list, return to step 7.
+		while (ei >= 1); //If the entry for new element in the list of active formatting elements is not the last entry in the list, return to step 7.
 	}
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#creating-and-inserting-elements
@@ -2299,7 +2324,7 @@ class TreeBuilder
 	 * @return
 	 * @see http://www.w3.org/TR/html5/syntax.html#current-node
 	 */
-	function currentNode() : Node
+	function currentNode() : Element
 	{
 		return stack[stack.length - 1];
 	}
@@ -2324,7 +2349,7 @@ class TreeBuilder
 		switch(ct)
 		{
 			case CHAR(c):
-				tn.appendData( String.fromCharCode( c ) );
+				tn.appendData( String.fromCharCode( c ) );// trace(String.fromCharCode(c));
 			case _:
 				throw "Error: CHAR token expected";
 		}

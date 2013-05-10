@@ -116,7 +116,7 @@ class Document extends Node
 		//}
 		
 		DOMInternals.setNodeDocument( ne, this );
-		
+
 		return ne;
 	}
 	/**

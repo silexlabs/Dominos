@@ -112,7 +112,7 @@ class DOMInternals
 				throw "HierarchyRequestError";
 			}
 			if ( node.nodeType == Node.DOCUMENT_TYPE_NODE && 
-				( hasChild( parent, Node.DOCUMENT_TYPE_NODE ) || isPreceding( child, Node.ELEMENT_NODE ) || child == null ) && 
+				( hasChild( parent, Node.DOCUMENT_TYPE_NODE ) || child != null && isPreceding( child, Node.ELEMENT_NODE ) || child == null ) && 
 					hasChild( parent, Node.ELEMENT_NODE ) )
 			{
 				throw "HierarchyRequestError";

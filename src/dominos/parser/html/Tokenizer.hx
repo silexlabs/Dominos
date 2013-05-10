@@ -160,7 +160,7 @@ class CurrentTagHelper
 		sc = true;
 	}
 	public function generateToken():Token
-	{ trace("generate "+(e?"end":"start")+" token: "+n);
+	{ //trace("generate "+(e?"end":"start")+" token: "+n);
 		if (e)
 		{
 			return END_TAG( n, sc, attrs );
@@ -294,7 +294,7 @@ class Tokenizer
 		var tempBuffer : StringBuf = null;
 		
 		while ( state != null )
-		{trace("tokenizer state= "+state.getName());
+		{ //trace("tokenizer state= "+state.getName());
 			switch (state)
 			{
 				case DATA:
@@ -319,7 +319,7 @@ class Tokenizer
 					state = DATA;
 					
 					var cr : Array<Int> = is.nextCharRef(); //Attempt to consume a character reference, with no additional allowed character.
-					
+
 					if ( cr[0] == -2 ) // nothing returned
 					{
 						tb.processToken( CHAR( '&'.code ) );

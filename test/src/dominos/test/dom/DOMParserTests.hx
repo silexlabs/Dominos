@@ -23,7 +23,7 @@ class DOMParserTests
     }
 	
 	public function new() { }
-	
+
 	public function testParseSimpleHtml()
 	{
 		var docStr : String = "<html><head><title></title></head><body><h1>heading</h1><p>paragraph</p><body></html>";
@@ -31,5 +31,28 @@ class DOMParserTests
 		var doc : Document = dp.parseFromString( docStr, DOMParser.TEXT_HTML_TYPE );
 		trace(HTMLSerializer.serialize(doc));
 		Assert.notNull( doc );
+		dumpNode(doc);
+	}
+
+	public function testParseRemotePage()
+	{
+		var url : String = "http://www.w3.org/TR/html5/Overview.html#contents";
+		var docStr: String = haxe.Http.requestUrl( url );
+		
+		var dp : DOMParser = new DOMParser();
+		var doc : Document = dp.parseFromString( docStr, DOMParser.TEXT_HTML_TYPE );
+		trace(HTMLSerializer.serialize(doc));
+		Assert.notNull( doc );
+		dumpNode(doc);
+	}
+	
+	static public function dumpNode( n : dominos.dom.Node, ?i : Int = 0 ) : Void
+	{
+		var indent : StringBuf = new StringBuf(); for ( y in 0...i) { indent.addChar( 0x20 ); }
+		trace(  indent.toString() + n.nodeName );
+		for (nc in n.childNodes)
+		{
+			dumpNode( nc, i + 1 );
+		}
 	}
 }

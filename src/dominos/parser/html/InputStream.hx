@@ -135,7 +135,7 @@ class InputStream
 	 * @return the next input char code or -1 if EOF
 	 */
 	public function nextInputChar() : Int
-	{ trace("before nextInputChar "+data.charAt(currCharI));
+	{ //trace("before nextInputChar "+data.charAt(currCharI));trace("nextInputChar "+data.charAt(currCharI+1));
 		return ( currCharI++ < data.length && !StringTools.isEof(data.fastCodeAt(currCharI)) ) ? data.fastCodeAt(currCharI) : -1 ;
 	}
 	
@@ -256,18 +256,18 @@ class InputStream
 					{
 						//TODO there is a parse error.
 					}
-					unconsume( s.length );
 				}
-				if ( lastExactMatch == s )
+				else
 				{
-					if ( c != ';'.code )
+					if ( lastExactMatch == s )
 					{
-						//TODO there is a parse error.
+						if ( c != ';'.code )
+						{
+							//TODO there is a parse error.
+						}
+						return namedCharRef().get( s );
 					}
-					return namedCharRef().get( s );
-				}
-				if ( lastExactMatch != null )
-				{
+					// here, lastExactMatch != null
 					unconsume( s.length - lastExactMatch.length );
 					//TODO there is a parse error.
 					return namedCharRef().get( lastExactMatch );
@@ -331,8 +331,10 @@ class InputStream
 	public function consumeUntilString( s : String ) : Array<Int>
 	{
 		var buf = new Array();
+		currCharI++;
 
-		while ( currCharI++ < data.length && !StringTools.isEof( data.fastCodeAt( currCharI ) ) )
+		//while ( currCharI++ < data.length && !StringTools.isEof( data.fastCodeAt( currCharI ) ) )
+		while ( currCharI < data.length && !StringTools.isEof( data.fastCodeAt( currCharI ) ) )
 		{
 			if ( currCharI + s.length <= data.length && !StringTools.isEof( data.fastCodeAt( currCharI + s.length - 1 ) ) )
 			{
@@ -350,6 +352,7 @@ class InputStream
 				}
 			}
 			buf.push( data.fastCodeAt( currCharI ) );
+			currCharI++;
 		}
 		return buf;
 	}
@@ -360,7 +363,9 @@ class InputStream
 	 */
 	public function unconsumeUntil( c : Int ) : Int
 	{
-		while ( currCharI-- >= 0 && data.fastCodeAt(currCharI) != c ) { }
+		//while ( currCharI-- >= 0 && data.fastCodeAt(currCharI) != c ) { }
+		currCharI--;
+		while ( currCharI >= 0 && data.fastCodeAt(currCharI) != c ) { currCharI--; }
 		return currCharI >= 0 ? data.fastCodeAt(currCharI) : -1 ;
 	}
 	/**

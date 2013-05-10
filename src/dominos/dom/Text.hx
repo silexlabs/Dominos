@@ -61,7 +61,7 @@ class Text extends CharacterData
 	}
 	override public function get_nodeName() : DOMString
 	{
-		return "#test";
+		return "#text";
 	}
 	override public function get_nodeValue() : Null<DOMString>
 	{
