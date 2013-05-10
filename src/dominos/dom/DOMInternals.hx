@@ -107,7 +107,7 @@ class DOMInternals
 				}
 			}
 			if ( node.nodeType == Node.ELEMENT_NODE &&
-				( hasChild( parent, Node.ELEMENT_NODE ) || child.nodeType == Node.DOCUMENT_TYPE_NODE || child != null && isFollowing( child, Node.DOCUMENT_TYPE_NODE) ) )
+				( hasChild( parent, Node.ELEMENT_NODE ) || child != null && (child.nodeType == Node.DOCUMENT_TYPE_NODE || isFollowing( child, Node.DOCUMENT_TYPE_NODE)) ) )
 			{
 				throw "HierarchyRequestError";
 			}

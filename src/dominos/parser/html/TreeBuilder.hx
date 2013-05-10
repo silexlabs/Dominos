@@ -291,8 +291,12 @@ class TreeBuilder
 		this.tok = tok;
 		// and to the input stream
 		this.is = is;
+		// init stack of open elts
+		stack = [];
 		//init list of active formatting elts to empty array
 		lafe = [];
+		//init insertion mode
+		this.im = INITIAL;
 	}
 	
 	/**
@@ -306,12 +310,12 @@ class TreeBuilder
 	 * @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
 	 */
 	@:access(dominos.dom)
-	public function processToken( t : Token, ?utrf : InsertionMode = null ) : TokenProcessRet
-	{
+	public function processToken( t : Token, ?utrf : Null<InsertionMode> = null ) : TokenProcessRet
+	{ trace("utrf null? "+(utrf==null));
 		// @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
-		var m = utrf != null && Lambda.exists( [IN_HEAD, IN_BODY, IN_TABLE, IN_SELECT], function(v:InsertionMode) { return Type.enumEq(utrf, v); } ) ? utrf : im;
+		var m = ( utrf != null && Lambda.exists( [IN_HEAD, IN_BODY, IN_TABLE, IN_SELECT], function(v:InsertionMode) { return Type.enumEq(utrf, v); } ) ) ? utrf : im;
 		// @see http://www.w3.org/TR/html5/syntax.html#acknowledge-self-closing-flag
-		var ack = false;
+		var ack = false; trace("m ? "+(m.getName()));
 		switch ( m )
 		{
 			case INITIAL:
@@ -652,7 +656,7 @@ class TreeBuilder
 						}
 						else
 						{
-							if (Lambda.exists( stack, function(e) { return Lambda.exists(["dd","dt","li","optgroup","option","p","rp","rt","tbody","td","tfoot","th","thead","tr","body","html"], function(n) { return n == e.nodeName; } ); } ) )
+							if (Lambda.exists( stack, function(e) { return Lambda.exists(["dd","dt","li","optgroup","option","p","rp","rt","tbody","td","tfoot","th","thead","tr","body","html"], function(n) { return n == e.nodeName.toLowerCase(); } ); } ) )
 							{
 								//TODO parse error
 							}
@@ -674,7 +678,7 @@ class TreeBuilder
 							// act as if an end tag with the tag name "p" had been seen.
 							processToken( END_TAG( "p", false, new Map()) );
 						}
-						if ( Lambda.exists(["h1", "h2", "h3", "h4", "h5", "h6"], function(e) { return currentNode().nodeName == e; } ) )
+						if ( Lambda.exists(["h1", "h2", "h3", "h4", "h5", "h6"], function(e) { return currentNode().nodeName.toLowerCase() == e; } ) )
 						{
 							//TODO parse error
 							stack.pop();
@@ -712,13 +716,13 @@ class TreeBuilder
 						var i = stack.length;
 						while (i-- > 0)
 						{
-							if ( stack[i].nodeName == "li" )
+							if ( stack[i].nodeName.toLowerCase() == "li" )
 							{
 								processToken( END_TAG("li", false, new Map()) );
 								break;
 							}
-							if ( stack[i].nodeName != "address" && stack[i].nodeName != "div" && stack[i].nodeName != "p" && 
-								Lambda.exists(specials(), function(e) { return e == stack[i].nodeName; } ) )
+							if ( stack[i].nodeName.toLowerCase() != "address" && stack[i].nodeName.toLowerCase() != "div" && stack[i].nodeName.toLowerCase() != "p" && 
+								Lambda.exists(specials(), function(e) { return e == stack[i].nodeName.toLowerCase(); } ) )
 							{
 								break;
 							}
@@ -734,13 +738,13 @@ class TreeBuilder
 						var i = stack.length;
 						while (i-- > 0)
 						{
-							if ( stack[i].nodeName == "dd" || stack[i].nodeName == "dt" )
+							if ( stack[i].nodeName.toLowerCase() == "dd" || stack[i].nodeName.toLowerCase() == "dt" )
 							{
-								processToken( END_TAG(stack[i].nodeName, false, new Map()) );
+								processToken( END_TAG(stack[i].nodeName.toLowerCase(), false, new Map()) );
 								break;
 							}
-							if ( stack[i].nodeName != "address" && stack[i].nodeName != "div" && stack[i].nodeName != "p" && 
-								Lambda.exists(specials(), function(e) { return e == stack[i].nodeName; } ) )
+							if ( stack[i].nodeName.toLowerCase() != "address" && stack[i].nodeName.toLowerCase() != "div" && stack[i].nodeName.toLowerCase() != "p" && 
+								Lambda.exists(specials(), function(e) { return e == stack[i].nodeName.toLowerCase(); } ) )
 							{
 								break;
 							}
@@ -781,14 +785,14 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags();
-							if ( tg != currentNode().nodeName )
+							if ( tg != currentNode().nodeName.toLowerCase() )
 							{
 								//TODO parse error
 							}
 							var i = stack.length; var found = false;
 							while ( i-- >= 0 && !found )
 							{
-								if ( stack[i].nodeName == tg )
+								if ( stack[i].nodeName.toLowerCase() == tg )
 								{
 									found = true;
 								}
@@ -798,7 +802,7 @@ class TreeBuilder
 					case END_TAG( "form", _, _ ):
 						var node = fp;
 						fp = null;
-						if ( node == null || !isEltInScope([node.nodeName]) )
+						if ( node == null || !isEltInScope([node.nodeName.toLowerCase()]) )
 						{
 							//TODO parse error
 							return IGNORED;
@@ -812,9 +816,9 @@ class TreeBuilder
 							}
 							stack.remove( node );
 						}
-					case END_TAG( "p", _, _ ):
+					case END_TAG( "p", _, _ ): trace("END TAG p processing !");
 						if (!isEltInButtonScope(["p"]))
-						{
+						{ trace("isEltInButtonScope :( "+stack);
 							//TODO parse error
 							processToken( START_TAG("p", false, new Map()) );
 							processToken(t);
@@ -822,16 +826,16 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags( ["p"] );
-							if ( currentNode().nodeName != "p" )
+							if ( currentNode().nodeName.toLowerCase() != "p" )
 							{
 								//TODO parse error
 							}
 							var i = stack.length; var found = false;
 							while ( i-- >= 0 && !found)
 							{
-								if ( stack[i].nodeName == "p" )
+								if ( stack[i].nodeName.toLowerCase() == "p" )
 								{
-									found = true;
+									found = true; trace("stack cleant after p tag");
 								}
 								stack.pop();
 							}
@@ -845,14 +849,14 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags( ["li"] );
-							if ( currentNode().nodeName != "li" )
+							if ( currentNode().nodeName.toLowerCase() != "li" )
 							{
 								//TODO parse error
 							}
 							var i = stack.length; var found = false;
 							while ( i-- >= 0 && !found )
 							{
-								if ( stack[i].nodeName == "li" )
+								if ( stack[i].nodeName.toLowerCase() == "li" )
 								{
 									found = true;
 								}
@@ -868,14 +872,14 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags( [tg] );
-							if ( currentNode().nodeName != tg )
+							if ( currentNode().nodeName.toLowerCase() != tg )
 							{
 								//TODO parse error
 							}
 							var i = stack.length; var found = false;
 							while ( i-- >= 0 && !found )
 							{
-								if ( stack[i].nodeName == tg )
+								if ( stack[i].nodeName.toLowerCase() == tg )
 								{
 									found = true;
 								}
@@ -891,14 +895,14 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags();
-							if ( currentNode().nodeName != tg )
+							if ( currentNode().nodeName.toLowerCase() != tg )
 							{
 								//TODO parse error
 							}
 							var i = stack.length; var found = false;
 							while ( i-- >= 0 && !found )
 							{
-								if ( Lambda.exists(["h1", "h2", "h3", "h4", "h5", "h6"], function(e) { return stack[i].nodeName == e; } ) )
+								if ( Lambda.exists(["h1", "h2", "h3", "h4", "h5", "h6"], function(e) { return stack[i].nodeName.toLowerCase() == e; } ) )
 								{
 									found = true;
 								}
@@ -907,14 +911,14 @@ class TreeBuilder
 						}
 					case START_TAG( "a", _, _ ):
 						var i = lafe.length;
-						while ( i-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[i].e.nodeName) )
+						while ( i-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[i].e.nodeName.toLowerCase()) )
 						{
-							if ( lafe[i].e.nodeName == "a" )
+							if ( lafe[i].e.nodeName.toLowerCase() == "a" )
 							{
 								var e = lafe[i];
 								//TODO parse error
 								processToken( END_TAG("a", false, new Map()) );
-								if ( e.e.nodeName == "a" ) // check if still there
+								if ( e.e.nodeName.toLowerCase() == "a" ) // check if still there
 								{
 									lafe.remove(e);
 									stack.remove(cast e.e);
@@ -943,9 +947,9 @@ class TreeBuilder
 							oc++;
 							var fe : ActiveFormattingElt = null;
 							var fei = lafe.length;
-							while ( fe == null && fei-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[fei].e.nodeName) )
+							while ( fe == null && fei-- >= 0 && !Lambda.has( scopeMarkersList(), lafe[fei].e.nodeName.toLowerCase()) )
 							{
-								if ( lafe[fei].e.nodeName == tg )
+								if ( lafe[fei].e.nodeName.toLowerCase() == tg )
 								{
 									fe = lafe[fei];
 								}
@@ -981,7 +985,7 @@ class TreeBuilder
 							var fbi = Lambda.indexOf( stack, cast fe.e );
 							while ( fbi++ < stack.length && fb == null )
 							{
-								if ( Lambda.has(specials(), stack[fbi].nodeName) )
+								if ( Lambda.has(specials(), stack[fbi].nodeName.toLowerCase()) )
 								{
 									fb = stack[fbi];
 								}
@@ -1053,7 +1057,7 @@ class TreeBuilder
 								}
 							}
 							//If the common ancestor node is a table, tbody, tfoot, thead, or tr element,
-							if ( Lambda.has(["table", "tbody", "tfoot", "thead", "tr"], ca.nodeName) )
+							if ( Lambda.has(["table", "tbody", "tfoot", "thead", "tr"], ca.nodeName.toLowerCase()) )
 							{
 								//foster parent whatever last node ended up being in the previous step, first removing it from its previous parent node if any.
 								fosterParent( ln );
@@ -1101,13 +1105,13 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags();
-							if (currentNode().nodeName != tg)
+							if (currentNode().nodeName.toLowerCase() != tg)
 							{
 								//TODO parse error
 							}
 							while ( stack.length > 0 )
 							{
-								if (stack.pop().nodeName == tg)
+								if (stack.pop().nodeName.toLowerCase() == tg)
 								{
 									break;
 								}
@@ -1237,7 +1241,7 @@ class TreeBuilder
 							im = IN_SELECT;
 						}
 					case START_TAG( "optgroup", _, _ ) | START_TAG( "option", _, _ ):
-						if ( currentNode().nodeName == "option" )
+						if ( currentNode().nodeName.toLowerCase() == "option" )
 						{
 							processToken(END_TAG("option", false, new Map()));
 						}
@@ -1247,7 +1251,7 @@ class TreeBuilder
 						if ( isEltInScope(["ruby"]) )
 						{
 							genImpliedEndTags();
-							if ( currentNode().nodeName != "ruby" )
+							if ( currentNode().nodeName.toLowerCase() != "ruby" )
 							{
 								//TODO parse error
 							}
@@ -1296,17 +1300,17 @@ class TreeBuilder
 						var n = currentNode();
 						while (true)
 						{
-							if ( tg == n.nodeName )
+							if ( tg == n.nodeName.toLowerCase() )
 							{
 								genImpliedEndTags( [tg] );
-								if ( currentNode().nodeName != tg )
+								if ( currentNode().nodeName.toLowerCase() != tg )
 								{
 									//TODO parse error
 								}
 								//Pop all the nodes from the current node up to node, including node, then stop these steps.
 								stack = stack.slice(0, Lambda.indexOf(stack, cast n));
 							}
-							else if (Lambda.has(specials(),n.nodeName))
+							else if (Lambda.has(specials(),n.nodeName.toLowerCase()))
 							{
 								//TODO parse error
 								return IGNORED;
@@ -1322,7 +1326,7 @@ class TreeBuilder
 						//Note: This can never be a U+0000 NULL character; the tokenizer converts those to U+FFFD REPLACEMENT CHARACTER characters.
 					case EOF:
 						//TODO parse error
-						if (currentNode().nodeName == "script")
+						if (currentNode().nodeName.toLowerCase() == "script")
 						{
 							//TODO mark the script element as "already started".
 						}
@@ -1347,7 +1351,7 @@ class TreeBuilder
 			case IN_TABLE:
 				switch (t)
 				{
-					case CHAR( _ ) if (Lambda.has(["table","tbody","tfoot","thead","tr"],currentNode().nodeName)):
+					case CHAR( _ ) if (Lambda.has(["table","tbody","tfoot","thead","tr"],currentNode().nodeName.toLowerCase())):
 						ptct = new Array<Token>();
 						om = im;
 						im = IN_TABLE_TEXT;
@@ -1396,7 +1400,7 @@ class TreeBuilder
 							return IGNORED;
 						}
 						//Pop elements from this stack until a table element has been popped from the stack.
-						while (stack.pop().nodeName != "table") { }
+						while (stack.pop().nodeName.toLowerCase() != "table") { }
 						//Reset the insertion mode appropriately.
 						resetInsertionMode();
 					case END_TAG(tg, _, _) if (Lambda.has(["body", "caption", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"],tg)):
@@ -1422,7 +1426,7 @@ class TreeBuilder
 					case EOF:
 						//If the current node is not the root html element, then this is a parse error.
 						//Note: The current node can only be the root html element in the fragment case.
-						if (currentNode().nodeName != "html")
+						if (currentNode().nodeName.toLowerCase() != "html")
 						{
 							//TODO parse error
 						}
@@ -1473,12 +1477,12 @@ class TreeBuilder
 						//else
 						//{
 							genImpliedEndTags();
-							if (currentNode().nodeName == "caption")
+							if (currentNode().nodeName.toLowerCase() == "caption")
 							{
 								//TODO parse error
 							}
 							//Pop elements from this stack until a caption element has been popped from the stack.
-							while (stack.pop().nodeName != "caption") { }
+							while (stack.pop().nodeName.toLowerCase() != "caption") { }
 							clearLafeUntilLastMarker();
 							im = IN_TABLE;
 						//}
@@ -1565,7 +1569,7 @@ class TreeBuilder
 					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("tfoot",_,_)|START_TAG("thead",_,_)|END_TAG("table",_,_):
 						// TODO If the stack of open elements does not have a tbody, thead, or tfoot element in table scope, this is a parse error. Ignore the token. (fragment case)
 						clearStackBackToTableBodyContext();
-						processToken( END_TAG( currentNode().nodeName, false, new Map() ) );
+						processToken( END_TAG( currentNode().nodeName.toLowerCase(), false, new Map() ) );
 						processToken( t );
 					case END_TAG("body", _, _) | END_TAG("caption", _, _) | END_TAG("col", _, _) | END_TAG("colgroup", _, _) | END_TAG("html", _, _) | END_TAG("td", _, _) | END_TAG("th", _, _) | END_TAG("tr", _, _):
 						//TODO parse error
@@ -1616,11 +1620,11 @@ class TreeBuilder
 						else
 						{
 							genImpliedEndTags();
-							if (currentNode().nodeName != tg)
+							if (currentNode().nodeName.toLowerCase() != tg)
 							{
 								//TODO parse error
 							}
-							while (stack.pop().nodeName != tg) { }
+							while (stack.pop().nodeName.toLowerCase() != tg) { }
 							clearLafeUntilLastMarker();
 							im = IN_ROW;
 						}
@@ -1661,34 +1665,34 @@ class TreeBuilder
 					case START_TAG( "html", _, _ ):
 						processToken( t, IN_BODY );
 					case START_TAG( "option", _, _ ):
-						if ( currentNode().nodeName == "caption" )
+						if ( currentNode().nodeName.toLowerCase() == "caption" )
 						{
 							processToken( END_TAG( "caption", false, new Map() ) );
 						}
 						insertHTMLElement( t );
 					case START_TAG( "optgroup", _, _ ):
-						if ( currentNode().nodeName == "option" )
+						if ( currentNode().nodeName.toLowerCase() == "option" )
 						{
 							processToken( END_TAG( "option", false, new Map() ) );
 						}
-						if ( currentNode().nodeName == "optgroup" )
+						if ( currentNode().nodeName.toLowerCase() == "optgroup" )
 						{
 							processToken( END_TAG( "optgroup", false, new Map() ) );
 						}
 						insertHTMLElement( t );
 					case END_TAG( "optgroup", _, _ ):
-						if ( currentNode().nodeName == "option" && stack[stack.length-2].nodeName == "optgroup" )
+						if ( currentNode().nodeName.toLowerCase() == "option" && stack[stack.length-2].nodeName.toLowerCase() == "optgroup" )
 						{
 							processToken( END_TAG( "option", false, new Map() ) );
 						}
-						if ( currentNode().nodeName == "optgroup" )
+						if ( currentNode().nodeName.toLowerCase() == "optgroup" )
 						{
 							stack.pop();
 							//TODO parse error
 							return IGNORED;
 						}
 					case END_TAG( "option", _, _ ):
-						if ( currentNode().nodeName == "option" )
+						if ( currentNode().nodeName.toLowerCase() == "option" )
 						{
 							stack.pop();
 						}
@@ -1707,7 +1711,7 @@ class TreeBuilder
 						//}
 						//else
 						//{
-							while ( stack.pop().nodeName != "select" ) { }
+							while ( stack.pop().nodeName.toLowerCase() != "select" ) { }
 							resetInsertionMode();
 						//}
 					case START_TAG("select", sc, attrs):
@@ -1795,7 +1799,7 @@ class TreeBuilder
 						stack.pop();
 						//TODO If the parser was not originally created as part of the HTML fragment parsing algorithm (fragment case), 
 						//and the current node is no longer a frameset element, then switch the insertion mode to "after frameset".
-						if (currentNode().nodeName != "frameset")
+						if (currentNode().nodeName.toLowerCase() != "frameset")
 						{
 							im = AFTER_FRAMESET;
 						}
@@ -1959,25 +1963,25 @@ class TreeBuilder
 				//
 			//}
 			//If node is a td or th element and last is false, then switch the insertion mode to "in cell" and abort these steps.
-			if (!l && (n.nodeName=="td"||n.nodeName=="th"))
+			if (!l && (n.nodeName.toLowerCase() == "td" || n.nodeName.toLowerCase() == "th"))
 			{
 				im = IN_CELL;
 				return;
 			}
 			//If node is a tr element, then switch the insertion mode to "in row" and abort these steps.
-			if (n.nodeName=="tr")
+			if (n.nodeName.toLowerCase() == "tr")
 			{
 				im = IN_ROW;
 				return;
 			}
 			//If node is a tbody, thead, or tfoot element, then switch the insertion mode to "in table body" and abort these steps.
-			if (n.nodeName == "tbody" || n.nodeName == "thead" || n.nodeName == "tfoot")
+			if (n.nodeName.toLowerCase() == "tbody" || n.nodeName.toLowerCase() == "thead" || n.nodeName.toLowerCase() == "tfoot")
 			{
 				im = IN_TABLE_BODY;
 				return;
 			}
 			//If node is a caption element, then switch the insertion mode to "in caption" and abort these steps.
-			if (n.nodeName=="caption")
+			if (n.nodeName.toLowerCase() == "caption")
 			{
 				im = IN_CAPTION;
 			}
@@ -1987,7 +1991,7 @@ class TreeBuilder
 				//
 			//}
 			//If node is a table element, then switch the insertion mode to "in table" and abort these steps.
-			if (n.nodeName == "table")
+			if (n.nodeName.toLowerCase() == "table")
 			{
 				im = IN_TABLE;
 				return;
@@ -1998,7 +2002,7 @@ class TreeBuilder
 				//
 			//}
 			//If node is a body element, then switch the insertion mode to "in body" and abort these steps.
-			if (n.nodeName == "body")
+			if (n.nodeName.toLowerCase() == "body")
 			{
 				im = IN_BODY;
 				return;
@@ -2043,7 +2047,7 @@ class TreeBuilder
 	 */
 	function clearStackBackToTableRowContext() : Void
 	{
-		while (currentNode().nodeName != "html" && currentNode().nodeName != "tr")
+		while (currentNode().nodeName.toLowerCase() != "html" && currentNode().nodeName.toLowerCase() != "tr")
 		{
 			stack.pop();
 		}
@@ -2053,7 +2057,7 @@ class TreeBuilder
 	 */
 	function clearStackBackToTableBodyContext() : Void
 	{
-		while (currentNode().nodeName != "html" && currentNode().nodeName != "thead" && currentNode().nodeName != "tbody" && currentNode().nodeName != "tfoot")
+		while (currentNode().nodeName.toLowerCase() != "html" && currentNode().nodeName.toLowerCase() != "thead" && currentNode().nodeName.toLowerCase() != "tbody" && currentNode().nodeName.toLowerCase() != "tfoot")
 		{
 			stack.pop();
 		}
@@ -2064,7 +2068,7 @@ class TreeBuilder
 	 */
 	function clearStackBackToTableContext() : Void
 	{
-		while (currentNode().nodeName != "html" && currentNode().nodeName != "table")
+		while (currentNode().nodeName.toLowerCase() != "html" && currentNode().nodeName.toLowerCase() != "table")
 		{
 			stack.pop();
 		}
@@ -2076,7 +2080,7 @@ class TreeBuilder
 	{
 		while ( lafe.length > 0 )
 		{
-			if ( Lambda.has( scopeMarkersList(), lafe.pop().e.nodeName ) )
+			if ( Lambda.has( scopeMarkersList(), lafe.pop().e.nodeName.toLowerCase() ) )
 			{
 				return;
 			}
@@ -2092,7 +2096,7 @@ class TreeBuilder
 		var f : Element = null;
 		while ( i-- >= 0 && f == null )
 		{
-			if (stack[i].nodeName == "table")
+			if (stack[i].nodeName.toLowerCase() == "table")
 			{
 				if (stack[i].parentNode==null || stack[i].parentNode.nodeType!=Node.ELEMENT_NODE)
 				{
@@ -2125,7 +2129,7 @@ class TreeBuilder
 				list.remove(e);
 			}
 		}
-		if ( Lambda.exists(list, function(e) { return e == currentNode().nodeName; }) )
+		if ( Lambda.exists(list, function(e) { return e == currentNode().nodeName.toLowerCase(); }) )
 		{
 			stack.pop();
 		}
@@ -2140,12 +2144,12 @@ class TreeBuilder
 	{
 		var i = stack.length;
 		while ( i-- > 0 )
-		{
-			if ( Lambda.exists( eltTagNames, function(e) { return e == stack[i].nodeName; }) )
+		{// trace( "stack[i].nodeName= "+stack[i].nodeName.toLowerCase() ); trace( "eltTagNames= "+eltTagNames ); trace( "list= "+list );
+			if ( Lambda.exists( eltTagNames, function(e) { return e == stack[i].nodeName.toLowerCase(); }) ) // FIXME temp fix toLowerCase() but here might be something cleaner
 			{
 				return true;
 			}
-			if ( Lambda.exists( list, function(e) { return stack[i].nodeName == e; } ) )
+			if ( Lambda.exists( list, function(e) { return stack[i].nodeName.toLowerCase() == e; } ) ) // FIXME temp fix toLowerCase() but here might be something cleaner
 			{
 				return false;
 			}
@@ -2213,7 +2217,7 @@ class TreeBuilder
 			return;
 
 		if ( Lambda.exists(stack, function(e) { return lafe[lafe.length - 1].e == e; } ) || 
-				Lambda.exists(scopeMarkersList(), function(e) { return lafe[lafe.length - 1].e.nodeName == e; } ) )
+				Lambda.exists(scopeMarkersList(), function(e) { return lafe[lafe.length - 1].e.nodeName.toLowerCase() == e; } ) )
 			return;
 
 		var ei : Int = 1;
@@ -2222,7 +2226,7 @@ class TreeBuilder
 			ei++;
 
 			if ( Lambda.exists(stack, function(e) { return lafe[lafe.length - ei].e == e; } ) || 
-				Lambda.exists(scopeMarkersList(), function(e) { return lafe[lafe.length - ei].e.nodeName == e; } ) )
+				Lambda.exists(scopeMarkersList(), function(e) { return lafe[lafe.length - ei].e.nodeName.toLowerCase() == e; } ) )
 			{
 				ei--; //step 7
 				break;

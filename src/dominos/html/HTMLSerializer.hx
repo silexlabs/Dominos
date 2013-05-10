@@ -30,7 +30,7 @@ class HTMLSerializer
 				
 				s.addChar( 0x3C );
 				//Note: For HTML elements created by the HTML parser or Document.createElement(), tagname will be lowercase.
-				s.add(ce.nodeName);
+				s.add(ce.nodeName.toLowerCase());
 				
 				for ( attr in ce.attributes )
 				{
@@ -41,14 +41,16 @@ class HTMLSerializer
 					s.add( escape( attr.value ) );
 					s.addChar( 0x22 );
 				}
-				if ( ce.nodeName == "area" || ce.nodeName == "base" || ce.nodeName == "basefont" || ce.nodeName == "bgsound" || ce.nodeName == "br" || 
-					ce.nodeName == "col" || ce.nodeName == "embed" || ce.nodeName == "frame" || ce.nodeName == "hr" || ce.nodeName == "img" || 
-					ce.nodeName == "input" || ce.nodeName == "keygen" || ce.nodeName == "link" || ce.nodeName == "menuitem" || ce.nodeName == "meta" || 
-					ce.nodeName == "param" || ce.nodeName == "source" || ce.nodeName == "track" || ce.nodeName == "wbr" )
+				s.addChar(0x3E);
+				
+				if ( ce.nodeName.toLowerCase() == "area" || ce.nodeName.toLowerCase() == "base" || ce.nodeName.toLowerCase() == "basefont" || ce.nodeName.toLowerCase() == "bgsound" || ce.nodeName.toLowerCase() == "br" || 
+					ce.nodeName.toLowerCase() == "col" || ce.nodeName.toLowerCase() == "embed" || ce.nodeName.toLowerCase() == "frame" || ce.nodeName.toLowerCase() == "hr" || ce.nodeName.toLowerCase() == "img" || 
+					ce.nodeName.toLowerCase() == "input" || ce.nodeName.toLowerCase() == "keygen" || ce.nodeName.toLowerCase() == "link" || ce.nodeName.toLowerCase() == "menuitem" || ce.nodeName.toLowerCase() == "meta" || 
+					ce.nodeName.toLowerCase() == "param" || ce.nodeName.toLowerCase() == "source" || ce.nodeName.toLowerCase() == "track" || ce.nodeName.toLowerCase() == "wbr" )
 				{
 					continue; // next child processing
 				}
-				if (ce.nodeName == "pre" || ce.nodeName == "textarea" || ce.nodeName == "listing")
+				if (ce.nodeName.toLowerCase() == "pre" || ce.nodeName.toLowerCase() == "textarea" || ce.nodeName.toLowerCase() == "listing")
 				{
 					if ( ce.childNodes.length > 0 && ce.childNodes[0].nodeType == Node.TEXT_NODE && cast(ce.childNodes[0], Text).data.charCodeAt(0) == 0xA )
 					{
@@ -58,17 +60,17 @@ class HTMLSerializer
 				s.add( serialize( ce ) );
 				s.addChar(0x3C);
 				s.addChar(0x2F);
-				s.add(ce.nodeName);
+				s.add(ce.nodeName.toLowerCase());
 				s.addChar(0x3E);
 			}
 			else if ( currentNode.nodeType == Node.TEXT_NODE )
 			{
 				var t : Text = cast currentNode;
 				//TODO add "if the parent of current node is noscript element and scripting is enabled for the node" to the below condition
-				if ( t.parentNode.nodeName == "style" ||  t.parentNode.nodeName == "script" || t.parentNode.nodeName == "xmp" || 
-						t.parentNode.nodeName == "iframe" || t.parentNode.nodeName == "noembed" || 
-							t.parentNode.nodeName == "noframes" || t.parentNode.nodeName == "plaintext" )
-				{
+				if ( t.parentNode != null && (t.parentNode.nodeName.toLowerCase() == "style" ||  t.parentNode.nodeName.toLowerCase() == "script" || t.parentNode.nodeName.toLowerCase() == "xmp" || 
+						t.parentNode.nodeName.toLowerCase() == "iframe" || t.parentNode.nodeName.toLowerCase() == "noembed" || 
+							t.parentNode.nodeName.toLowerCase() == "noframes" || t.parentNode.nodeName.toLowerCase() == "plaintext") )
+				{ // FIXME why t.parentNode can be null ?
 					s.add( t.data );
 				}
 				else
@@ -110,7 +112,7 @@ class HTMLSerializer
 				s.addChar( 0x50 );
 				s.addChar( 0x45 );
 				s.addChar( 0x20 );
-				s.add( currentNode.nodeName );
+				s.add( currentNode.nodeName.toLowerCase() );
 				s.addChar( 0x3E );
 			}
 			else

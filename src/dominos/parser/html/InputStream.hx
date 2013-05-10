@@ -135,7 +135,7 @@ class InputStream
 	 * @return the next input char code or -1 if EOF
 	 */
 	public function nextInputChar() : Int
-	{
+	{ trace("before nextInputChar "+data.charAt(currCharI));
 		return ( currCharI++ < data.length && !StringTools.isEof(data.fastCodeAt(currCharI)) ) ? data.fastCodeAt(currCharI) : -1 ;
 	}
 	

@@ -30,10 +30,12 @@ class CharacterData extends Node
 		throw "Not implemented"; return null;
 	}
 
-	//void appendData(DOMString data);
+	/**
+	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-characterdata-appenddata
+	 */
 	public function appendData( arg : DOMString ) : Void
 	{
-		throw "Not implemented";
+		DOMInternals.replaceData( this, length, 0, arg );
 	}
 
 	//void insertData(unsigned long offset, DOMString data);
