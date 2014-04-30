@@ -14,9 +14,6 @@ import dominos.dom.Node;
 import dominos.dom.Element;
 import dominos.dom.Text;
 
-import dominos.parser.html.Tokenizer.Token;
-import dominos.parser.html.Tokenizer.State;
-
 /**
  * The document quirks mode
  * @see http://dom.spec.whatwg.org/#concept-document-no-quirks
@@ -56,7 +53,7 @@ enum InsertionMode
 	AFTER_AFTER_FRAMESET;
 }
 /**
- * Return value of processToken(). It sometimes useful to know what happened to a token while processing.
+ * Return value of doProcessToken(). It sometimes useful to know what happened to a token while processing.
  */
 enum TokenProcessRet
 {
@@ -94,7 +91,7 @@ class TreeBuilder
 	/**
 	 * 
 	 */
-	static inline var isindexStr = "This is a searchable index. Enter search keywords: (input field)";
+	static inline var isindexStr : String = "This is a searchable index. Enter search keywords: (input field)";
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#special
 	 */
@@ -199,10 +196,6 @@ class TreeBuilder
 	 * The DOMImplementation
 	 */
 	private var dom : DOMImplementation;
-	/**
-	 * The associated DOM Document
-	 */
-	private var doc : Document;
 
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#pending-table-character-tokens
@@ -260,49 +253,59 @@ class TreeBuilder
 	/**
 	 * a reference to the tokenizer to change its state
 	 */
-	private var tok : Tokenizer;
+	//private var tok : Tokenizer;
 	/**
 	 * a reference to the input stream
 	 */
-	private var is : InputStream;
+	//private var is : InputStream;
 	
 	/**
 	 * The currently being parsed document's mode.
 	 */
 	private var qm : QuirksMode;
-
-	/**
-	 * returns the doc if it's parsed
-	 */
-	public function getDoc() : Document
-	{
-		if (doc.readyState == "complete")
-		{
-			return doc;
-		}
-		throw "Error: did not finish parsing and assembling document yet!";
-	}
 	
 	/**
 	 * Creates a new TreeBuilder object for a given input stream and tokenizer
 	 * @param	tokenizer
 	 */
-	public function new( is : InputStream, tok : Tokenizer ) 
+	public function new( dom : DOMImplementation, doc : Document ) 
 	{
-		dom = new DOMImplementation();
+		this.dom = dom;
 		//the document that will result of the HTML parsing
-		doc = dom.createHTMLDocument();
+		this.doc = doc;
 		// need ref to tokenizer
-		this.tok = tok;
+		//this.tok = tok;
 		// and to the input stream
-		this.is = is;
+		//this.is = is;
 		// init stack of open elts
 		stack = [];
-		//init list of active formatting elts to empty array
+		// init list of active formatting elts to empty array
 		lafe = [];
-		//init insertion mode
+		// init insertion mode
 		this.im = INITIAL;
 	}
+
+
+	///
+	// API
+	//
+
+	/**
+	 * The associated DOM Document
+	 */
+	public var doc (default, null) : Document;
+
+	public dynamic function onStateChangeRequest(s : State) : Void {  }
+
+	public function processToken(t : Token) : Void {
+
+		doProcessToken(t);
+	}
+
+
+	///
+	// INTERNALS
+	//
 	
 	/**
 	 * Process a HTML token.
@@ -315,7 +318,7 @@ class TreeBuilder
 	 * @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
 	 */
 	@:access(dominos.dom)
-	public function processToken( t : Token, ?utrf : Null<InsertionMode> = null ) : TokenProcessRet
+	public function doProcessToken( t : Token, ? utrf : Null<InsertionMode> = null ) : TokenProcessRet
 	{ //trace("utrf null? "+(utrf==null));
 		// @see http://www.w3.org/TR/html5/syntax.html#using-the-rules-for
 		var m = ( utrf != null && Lambda.exists( [IN_HEAD, IN_BODY, IN_TABLE, IN_SELECT], function(v:InsertionMode) { return Type.enumEq(utrf, v); } ) ) ? utrf : im;
@@ -384,7 +387,7 @@ class TreeBuilder
 						
 						//In any case, switch the insertion mode to "before html", then reprocess the current token.
 						im = BEFORE_HTML;
-						processToken( t );
+						doProcessToken( t );
 						//@see Document.compatMode
 						//@see http://www.w3.org/TR/html5/embedded-content-0.html#an-iframe-srcdoc-document
 				}
@@ -426,7 +429,7 @@ class TreeBuilder
 						
 						im = BEFORE_HEAD;
 						//then reprocess the current token
-						processToken(t);
+						doProcessToken(t);
 				}
 			case BEFORE_HEAD:
 				switch ( t )
@@ -439,7 +442,7 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY);
+						doProcessToken( t, IN_BODY);
 					case START_TAG( "head", _, _ ):
 						// Set the head element pointer to the newly created head element.
 						hp = insertHTMLElement( t );
@@ -448,9 +451,9 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case _:
-						processToken( START_TAG( "head", false, new Map() ) );
+						doProcessToken( START_TAG( "head", false, new Map() ) );
 						//then reprocess the current token
-						processToken( t );
+						doProcessToken( t );
 				}
 			case IN_HEAD:
 				switch (t)
@@ -463,7 +466,7 @@ class TreeBuilder
 						// TODO parse ERROR
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case START_TAG( tg, sc, _ ) if( Lambda.has(["base", "basefont", "bgsound", "command", "link"], tg) ):
 						insertHTMLElement( t );
 						stack.pop();
@@ -505,7 +508,7 @@ class TreeBuilder
 						currentNode().appendChild(e);
 						stack.push(e);
 						//Switch the tokenizer to the script data state.
-						tok.switchState(SCRIPT_DATA);
+						onStateChangeRequest(SCRIPT_DATA);
 						//Let the original insertion mode be the current insertion mode.
 						om = im;
 						//Switch the insertion mode to "text".
@@ -521,8 +524,8 @@ class TreeBuilder
 						return IGNORED;
 					case _:
 						// Act as if an end tag token with the tag name "head" had been seen, and reprocess the current token.
-						processToken( END_TAG( "head", false, new Map() ) );
-						processToken(t);
+						doProcessToken( END_TAG( "head", false, new Map() ) );
+						doProcessToken(t);
 				}
 			case IN_HEAD_NOSCRIPT:
 				switch (t)
@@ -531,13 +534,13 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY);
+						doProcessToken( t, IN_BODY);
 					case END_TAG( "noscript", _, _ ):
 						//Pop the current node (which will be a noscript element) from the stack of open elements; the new current node will be a head element.
 						stack.pop();
 						im = IN_HEAD;
 					case CHAR(0x9)|CHAR(0xA)|CHAR(0xC)|CHAR(0xD)|CHAR(0x20)|COMMENT(_)|START_TAG("basefont",_,_)|START_TAG("bgsound",_,_)|START_TAG("link",_,_)|START_TAG("meta",_,_)|START_TAG("noframes",_,_)|START_TAG("style",_,_):
-						processToken( t, IN_HEAD);
+						doProcessToken( t, IN_HEAD);
 					case END_TAG(tg,_,_ ) if (tg!="br"):
 						// TODO parse error
 						return IGNORED;
@@ -547,8 +550,8 @@ class TreeBuilder
 					case _:
 						//TODO parse error
 						//Act as if an end tag with the tag name "noscript" had been seen and reprocess the current token.
-						processToken( END_TAG( "noscript", false, new Map() ) );
-						processToken(t);
+						doProcessToken( END_TAG( "noscript", false, new Map() ) );
+						doProcessToken(t);
 				}
 			case AFTER_HEAD:
 				switch (t)
@@ -561,7 +564,7 @@ class TreeBuilder
 						// TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY);
+						doProcessToken( t, IN_BODY);
 					case START_TAG( "body", _, _ ):
 						insertHTMLElement( t );
 						framesetOK = false;
@@ -572,7 +575,7 @@ class TreeBuilder
 					case START_TAG("base", _, _)|START_TAG("basefont", _, _)|START_TAG("bgsound", _, _)|START_TAG("link", _, _)|START_TAG("meta",_,_)|START_TAG("noframes",_,_)|START_TAG("script",_,_)|START_TAG("style",_,_)|START_TAG("title", _, _):
 						//TODO parse error
 						stack.push( hp ); // The head element pointer cannot be null at this point.
-						processToken( t, IN_HEAD );
+						doProcessToken( t, IN_HEAD );
 						//Remove the node pointed to by the head element pointer from the stack of open elements.
 						stack.remove( hp );
 					case START_TAG("head",_,_)|END_TAG("body",_,_)|END_TAG("html",_,_)|END_TAG("br",_,_):
@@ -581,9 +584,9 @@ class TreeBuilder
 					case _:
 						//Act as if a start tag token with the tag name "body" and no attributes had been seen, then set the frameset-ok flag back to "ok", 
 						//and then reprocess the current token.
-						processToken( START_TAG( "body", false, new Map() ) );
+						doProcessToken( START_TAG( "body", false, new Map() ) );
 						framesetOK = true;
-						processToken(t);
+						doProcessToken(t);
 				}
 			case IN_BODY: //trace( "Token = "+t.getName() + "  with: " + t.getParameters() );
 				switch (t)
@@ -616,7 +619,7 @@ class TreeBuilder
 						}
 					case START_TAG("base", _, _) | START_TAG("basefont", _, _) | START_TAG("bgsound", _, _) | START_TAG("command", _, _) | START_TAG("link", _, _) | 
 						START_TAG("meta", _, _) | START_TAG("noframes", _, _) | START_TAG("script", _, _) | START_TAG("style", _, _) | START_TAG("title", _, _):
-							processToken( t, IN_HEAD );
+							doProcessToken( t, IN_HEAD );
 					case START_TAG( "body", _, attrs ):
 						//TODO parse error
 						if ( stack.length > 1 && stack[1].tagName == "body" )
@@ -669,19 +672,19 @@ class TreeBuilder
 						}
 					case END_TAG( "html", _, _ ): 
 						// Act as if an end tag with tag name "body" had been seen, 
-						switch ( processToken( END_TAG( "body", false, new Map() ) ) )
+						switch ( doProcessToken( END_TAG( "body", false, new Map() ) ) )
 						{
 							case IGNORED:
 								//nothing
 							case _:
 								//then, if that token wasn't ignored, reprocess the current token.
-								processToken( t );
+								doProcessToken( t );
 						}
 					case START_TAG("address", _, _) | START_TAG("article", _, _) | START_TAG("aside", _, _) | START_TAG("blockquote", _, _) | START_TAG("center", _, _) | START_TAG("details", _, _) | START_TAG("dialog", _, _) | START_TAG("dir", _, _) | START_TAG("div", _, _) | START_TAG("dl", _, _) | START_TAG("fieldset", _, _) | START_TAG("figcaption", _, _) | START_TAG("figure", _, _) | START_TAG("footer", _, _) | START_TAG("header", _, _) | START_TAG("hgroup", _, _) | START_TAG("menu", _, _) | START_TAG("nav", _, _) | START_TAG("ol", _, _) | START_TAG("p", _, _) | START_TAG("section", _, _) | START_TAG("summary", _, _) | START_TAG("ul", _, _):
 						if ( isEltInButtonScope( ["p"] ) )
 						{
 							// act as if an end tag with the tag name "p" had been seen.
-							processToken( END_TAG( "p", false, new Map()) );
+							doProcessToken( END_TAG( "p", false, new Map()) );
 						}
 						if ( Lambda.exists(["h1", "h2", "h3", "h4", "h5", "h6"], function(e) { return currentNode().nodeName.toLowerCase() == e; } ) )
 						{
@@ -693,7 +696,7 @@ class TreeBuilder
 						if (isEltInButtonScope(["p"]))
 						{
 							// act as if an end tag with the tag name "p" had been seen.
-							processToken( END_TAG( "p", false, new Map()) );
+							doProcessToken( END_TAG( "p", false, new Map()) );
 						}
 						insertHTMLElement(t);
 						
@@ -711,7 +714,7 @@ class TreeBuilder
 						{
 							if (isEltInButtonScope(["p"]))
 							{
-								processToken( END_TAG( "p", false, new Map()) );
+								doProcessToken( END_TAG( "p", false, new Map()) );
 							}
 							fp = insertHTMLElement(t);
 						}
@@ -724,7 +727,7 @@ class TreeBuilder
 						{
 							if ( stack[i].nodeName.toLowerCase() == "li" )
 							{
-								processToken( END_TAG("li", false, new Map()) );
+								doProcessToken( END_TAG("li", false, new Map()) );
 								break;
 							}
 							if ( stack[i].nodeName.toLowerCase() != "address" && stack[i].nodeName.toLowerCase() != "div" && stack[i].nodeName.toLowerCase() != "p" && 
@@ -736,7 +739,7 @@ class TreeBuilder
 						}
 						if (isEltInButtonScope(["p"]))
 						{
-							processToken( END_TAG( "p", false, new Map()) );
+							doProcessToken( END_TAG( "p", false, new Map()) );
 						}
 						fp = insertHTMLElement(t);
 					case START_TAG("dd", _, _) | START_TAG("dt", _, _):
@@ -747,7 +750,7 @@ class TreeBuilder
 						{
 							if ( stack[i].nodeName.toLowerCase() == "dd" || stack[i].nodeName.toLowerCase() == "dt" )
 							{
-								processToken( END_TAG(stack[i].nodeName.toLowerCase(), false, new Map()) );
+								doProcessToken( END_TAG(stack[i].nodeName.toLowerCase(), false, new Map()) );
 								break;
 							}
 							if ( stack[i].nodeName.toLowerCase() != "address" && stack[i].nodeName.toLowerCase() != "div" && stack[i].nodeName.toLowerCase() != "p" && 
@@ -759,24 +762,24 @@ class TreeBuilder
 						}
 						if (isEltInButtonScope(["p"]))
 						{
-							processToken( END_TAG( "p", false, new Map()) );
+							doProcessToken( END_TAG( "p", false, new Map()) );
 						}
 						fp = insertHTMLElement(t);
 					case START_TAG("plaintext", _, _):
 						if ( isEltInButtonScope(["p"]) )
 						{
-							processToken( END_TAG( "p", false, new Map() ) );
+							doProcessToken( END_TAG( "p", false, new Map() ) );
 						}
 						insertHTMLElement(t);
 						//note: Once a start tag with the tag name "plaintext" has been seen, that will be the last token ever seen other 
 						//than character tokens (and the end-of-file token), because there is no way to switch out of the PLAINTEXT state.
-						tok.switchState(PLAINTEXT);
+						onStateChangeRequest(PLAINTEXT);
 					case START_TAG("button", _, _):
 						if ( isEltInScope( ["button"] ) )
 						{
 							//TODO parse error
-							processToken(END_TAG("button", false, new Map()));
-							processToken(t);
+							doProcessToken(END_TAG("button", false, new Map()));
+							doProcessToken(t);
 						}
 						else
 						{
@@ -830,8 +833,8 @@ class TreeBuilder
 						if (!isEltInButtonScope(["p"]))
 						{
 							//TODO parse error
-							processToken( START_TAG("p", false, new Map()) );
-							processToken(t);
+							doProcessToken( START_TAG("p", false, new Map()) );
+							doProcessToken(t);
 						}
 						else
 						{
@@ -936,7 +939,7 @@ class TreeBuilder
 							{
 								var fe = lafe[i];
 								//TODO parse error
-								processToken( END_TAG("a", false, new Map()) );
+								doProcessToken( END_TAG("a", false, new Map()) );
 								if ( fe.e.nodeName.toLowerCase() == "a" ) // check if still there
 								{
 									lafe.remove( fe );
@@ -956,7 +959,7 @@ class TreeBuilder
 						if ( isEltInScope( ["nobr"] ) )
 						{
 							//TODO parse error
-							processToken( END_TAG("nobr", false, new Map()) );
+							doProcessToken( END_TAG("nobr", false, new Map()) );
 							reconstructActiveFormattingElements();
 						}
 						lafe.push( { e:insertHTMLElement( t ), t:t } );
@@ -979,7 +982,7 @@ class TreeBuilder
 							//If there is no such node, then abort these steps and instead act as described in the "any other end tag" entry below.
 							if ( fe == null )
 							{
-								return processToken( END_TAG("sarcasm",false,new Map()) );
+								return doProcessToken( END_TAG("sarcasm",false,new Map()) );
 							}
 							//if there is such a node, but that node is not in the stack of open elements, then this is a parse error; remove the 
 							//element from the list, and abort these steps.
@@ -1147,7 +1150,7 @@ class TreeBuilder
 					case START_TAG( "table", _, _ ):
 						if ( !qm.equals(QUIRKS) && isEltInButtonScope(["p"]) )
 						{
-							processToken( END_TAG( "p", false, new Map() ) );
+							doProcessToken( END_TAG( "p", false, new Map() ) );
 						}
 						insertHTMLElement( t );
 						framesetOK = false;
@@ -1171,7 +1174,7 @@ class TreeBuilder
 					case START_TAG( "hr", sc, _ ):
 						if ( isEltInButtonScope(["p"]) )
 						{
-							processToken( END_TAG("p", false, new Map()) );
+							doProcessToken( END_TAG("p", false, new Map()) );
 						}
 						insertHTMLElement( t );
 						stack.pop();
@@ -1182,7 +1185,7 @@ class TreeBuilder
 						framesetOK = false;
 					case START_TAG( "image", sc, attrs ):
 						//TODO parse error
-						processToken( START_TAG( "img", sc, attrs ) );
+						doProcessToken( START_TAG( "img", sc, attrs ) );
 					case START_TAG( "isindex", sc, attrs ):
 						//TODO parse error
 						//If the form element pointer is not null, then ignore the token.
@@ -1192,22 +1195,22 @@ class TreeBuilder
 							{
 								ack = true;
 							}
-							processToken( START_TAG( "form", false, new Map() ) );
+							doProcessToken( START_TAG( "form", false, new Map() ) );
 							//If the token has an attribute called "action", set the action attribute on the resulting form element 
 							//to the value of the "action" attribute of the token.
 							if (attrs.get("action") != null)
 							{
 								fp.setAttribute("action", attrs.get("action"));
 							}
-							processToken( START_TAG( "hr", false, new Map() ) );
-							processToken( START_TAG( "label", false, new Map() ) );
+							doProcessToken( START_TAG( "hr", false, new Map() ) );
+							doProcessToken( START_TAG( "label", false, new Map() ) );
 							//Act as if a stream of character tokens had been seen (see below for what they should say).
 							var str = attrs.get("prompt") == null ? isindexStr : attrs.get("prompt");
 							for(i in 0...str.length)
 							{
-								processToken( CHAR( str.charCodeAt(i) ) );
+								doProcessToken( CHAR( str.charCodeAt(i) ) );
 							}
-							processToken( START_TAG( "label", false, new Map() ) );
+							doProcessToken( START_TAG( "label", false, new Map() ) );
 							//Act as if a start tag token with the tag name "input" had been seen, with all the attributes from the "isindex" 
 							//token except "name", "action", and "prompt". Set the name attribute of the resulting input element to the value "isindex".
 							var inAttrs = attrs;
@@ -1215,15 +1218,15 @@ class TreeBuilder
 							inAttrs.remove("action");
 							inAttrs.remove("prompt");
 							inAttrs.set("name", "isindex");
-							processToken( START_TAG( "input", false, inAttrs ) );
+							doProcessToken( START_TAG( "input", false, inAttrs ) );
 							// Act as if a stream of character tokens had been seen (see below for what they should say).
 							for(i in 0...str.length)
 							{
-								processToken( CHAR( str.charCodeAt(i) ) );
+								doProcessToken( CHAR( str.charCodeAt(i) ) );
 							}
-							processToken( END_TAG( "label", false, new Map() ) );
-							processToken( START_TAG( "hr", false, new Map() ) );
-							processToken( END_TAG( "form", false, new Map() ) );
+							doProcessToken( END_TAG( "label", false, new Map() ) );
+							doProcessToken( START_TAG( "hr", false, new Map() ) );
+							doProcessToken( END_TAG( "form", false, new Map() ) );
 						}
 					case START_TAG( "textarea", _, _ ):
 						//Insert an HTML element for the token.
@@ -1232,7 +1235,7 @@ class TreeBuilder
 						//(Newlines at the start of textarea elements are ignored as an authoring convenience.)
 						
 						//Switch the tokenizer to the RCDATA state.
-						tok.switchState( RCDATA );
+						onStateChangeRequest( RCDATA );
 						//Let the original insertion mode be the current insertion mode.
 						om = im;
 						//Set the frameset-ok flag to "not ok".
@@ -1242,7 +1245,7 @@ class TreeBuilder
 					case START_TAG( "xmp", _, _ ):
 						if (isEltInButtonScope(["p"]))
 						{
-							processToken(END_TAG("p", false, new Map()));
+							doProcessToken(END_TAG("p", false, new Map()));
 						}
 						reconstructActiveFormattingElements();
 						framesetOK = false;
@@ -1269,7 +1272,7 @@ class TreeBuilder
 					case START_TAG( "optgroup", _, _ ) | START_TAG( "option", _, _ ):
 						if ( currentNode().nodeName.toLowerCase() == "option" )
 						{
-							processToken(END_TAG("option", false, new Map()));
+							doProcessToken(END_TAG("option", false, new Map()));
 						}
 						reconstructActiveFormattingElements();
 						insertHTMLElement( t );
@@ -1285,7 +1288,7 @@ class TreeBuilder
 						insertHTMLElement( t );	
 					case END_TAG( "br", _, _ ):
 						//TODO parse error
-						processToken( START_TAG( "br", false, new Map() ) );
+						doProcessToken( START_TAG( "br", false, new Map() ) );
 						return IGNORED;
 					case START_TAG( "math", sc, _ ):
 						reconstructActiveFormattingElements();
@@ -1359,7 +1362,7 @@ class TreeBuilder
 						}
 						stack.pop();
 						im = om;
-						processToken( t );
+						doProcessToken( t );
 					case END_TAG( "script", _, _ ):
 						//TODO Provide a stable state. @see http://www.w3.org/TR/html5/webappapis.html#provide-a-stable-state
 						trace("WARNING: TEXT INSERTION MODE / END_TAG('script') NOT IMPLEMENTED !!!");
@@ -1382,7 +1385,7 @@ class TreeBuilder
 						ptct = new Array<Token>();
 						om = im;
 						im = IN_TABLE_TEXT;
-						processToken( t );
+						doProcessToken( t );
 					case COMMENT( d ):
 						currentNode().appendChild( doc.createComment( d ) );
 					case DOCTYPE( _, _, _, _ ):
@@ -1400,24 +1403,24 @@ class TreeBuilder
 						insertHTMLElement( t );
 						im = IN_COLUMN_GROUP;
 					case START_TAG( "col", _, _ ):
-						processToken( START_TAG( "colgroup", false, new Map() ) );
-						processToken( t );
+						doProcessToken( START_TAG( "colgroup", false, new Map() ) );
+						doProcessToken( t );
 					case START_TAG("tbody",_,_) | START_TAG("tfoot",_,_) | START_TAG("thead",_,_):
 						clearStackBackToTableContext();
 						insertHTMLElement( t );
 						im = IN_TABLE_BODY;
 					case START_TAG("td", _, _) | START_TAG("th", _, _) | START_TAG("tr", _, _):
-						processToken( START_TAG("tbody",false,new Map()) );
-						processToken( t );
+						doProcessToken( START_TAG("tbody",false,new Map()) );
+						doProcessToken( t );
 					case START_TAG("table", _, _):
 						//TODO parse error
-						switch ( processToken( END_TAG("table", false, new Map()) ) )
+						switch ( doProcessToken( END_TAG("table", false, new Map()) ) )
 						{
 							case IGNORED:
 								// nothing
 							case _:
 								//then, if that token wasn't ignored, reprocess the current token.
-								processToken( t );
+								doProcessToken( t );
 						}
 						//Note: The fake end tag token here can only be ignored in the fragment case.
 					case END_TAG( "table", _, _ ):
@@ -1434,7 +1437,7 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG("style", _, _) | START_TAG("script", _, _):
-						processToken( t, IN_HEAD);
+						doProcessToken( t, IN_HEAD);
 					case START_TAG("input", sc, attrs) if( attrs.get("type") != null && attrs.get("type") != "hidden" ):
 						//TODO parse error
 						insertHTMLElement( t );
@@ -1460,7 +1463,7 @@ class TreeBuilder
 						stopParsing();
 					case _:
 						//TODO parse error
-						processToken( t, IN_BODY); // FIXME
+						doProcessToken( t, IN_BODY); // FIXME
 						//TODO except that whenever a node would be inserted into the current node when the current node is a table, tbody, tfoot, thead, or tr element, 
 						//then it must instead be foster parented.
 				}
@@ -1477,7 +1480,7 @@ class TreeBuilder
 						if (Lambda.exists( ptct, function(ct) { return !isSpaceChar(ct); } ))
 						{
 							//TODO reprocess the character tokens in the pending table character tokens list using the rules given in the 
-							//"anything else" entry in the "in table" insertion mode. => create a ANYTHING ELSE TOKEN and a use rules entry in processToken ?
+							//"anything else" entry in the "in table" insertion mode. => create a ANYTHING ELSE TOKEN and a use rules entry in doProcessToken ?
 						}
 						else
 						{
@@ -1488,7 +1491,7 @@ class TreeBuilder
 							}
 							//Switch the insertion mode to the original insertion mode and reprocess the token.
 							im = om;
-							processToken(t);
+							doProcessToken(t);
 						}
 				}
 			case IN_CAPTION:
@@ -1516,20 +1519,20 @@ class TreeBuilder
 					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("td",_,_)|START_TAG("tfoot",_,_)|START_TAG("th",_,_)|START_TAG("thead",_,_)|START_TAG("tr",_,_)|END_TAG("table",_,_):
 						//TODO parse error
 						//Act as if an end tag with the tag name "caption" had been seen,
-						switch ( processToken( END_TAG("caption",false,new Map()) ) )
+						switch ( doProcessToken( END_TAG("caption",false,new Map()) ) )
 						{
 							case IGNORED:
 								// nothing
 							case _:
 								//then, if that token wasn't ignored, reprocess the current token.
-								processToken( t );
+								doProcessToken( t );
 						}
 						
 					case END_TAG("body",_,_)|END_TAG("col",_,_)|END_TAG("colgroup",_,_)|END_TAG("html",_,_)|END_TAG("tbody",_,_)|END_TAG("td",_,_)|END_TAG("tfoot",_,_)|END_TAG("th",_,_)|END_TAG("thead",_,_)|END_TAG("tr",_,_):
 						//TODO parse error
 						return IGNORED;
 					case _:
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 				}
 			case IN_COLUMN_GROUP:
 				switch (t)
@@ -1542,7 +1545,7 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case START_TAG( "col", sc, _ ):
 						insertHTMLElement(t);
 						stack.pop();
@@ -1560,13 +1563,13 @@ class TreeBuilder
 					//case EOF://TODO If the current node is the root html element, then stop parsing. (fragment case) Otherwise, act as described in the "anything else" entry below.
 					case _:
 						//Act as if an end tag with the tag name "colgroup" had been seen
-						switch ( processToken( END_TAG( "col", false, new Map() ) ) )
+						switch ( doProcessToken( END_TAG( "col", false, new Map() ) ) )
 						{
 							case IGNORED:
 								// nothing
 							case _:
 								// and then, if that token wasn't ignored, reprocess the current token.
-								processToken( t );
+								doProcessToken( t );
 						}
 						//Note: The fake end tag token here can only be ignored in the fragment case.
 				}
@@ -1579,8 +1582,8 @@ class TreeBuilder
 						im = IN_ROW;
 					case START_TAG("th", _, _) | START_TAG("td", _, _):
 						//TODO parse error
-						processToken( START_TAG( "tr", false, new Map() ) );
-						processToken( t );
+						doProcessToken( START_TAG( "tr", false, new Map() ) );
+						doProcessToken( t );
 					case END_TAG(tg, _, _) if(tg=="tbody"||tg=="tfoot"||tg=="thead"):
 						if (!isEltInTableScope([tg]))
 						{
@@ -1596,13 +1599,13 @@ class TreeBuilder
 					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("tfoot",_,_)|START_TAG("thead",_,_)|END_TAG("table",_,_):
 						// TODO If the stack of open elements does not have a tbody, thead, or tfoot element in table scope, this is a parse error. Ignore the token. (fragment case)
 						clearStackBackToTableBodyContext();
-						processToken( END_TAG( currentNode().nodeName.toLowerCase(), false, new Map() ) );
-						processToken( t );
+						doProcessToken( END_TAG( currentNode().nodeName.toLowerCase(), false, new Map() ) );
+						doProcessToken( t );
 					case END_TAG("body", _, _) | END_TAG("caption", _, _) | END_TAG("col", _, _) | END_TAG("colgroup", _, _) | END_TAG("html", _, _) | END_TAG("td", _, _) | END_TAG("th", _, _) | END_TAG("tr", _, _):
 						//TODO parse error
 						return IGNORED;
 					case _:
-						processToken( t, IN_TABLE );
+						doProcessToken( t, IN_TABLE );
 				}
 			case IN_ROW:
 				switch (t)
@@ -1626,14 +1629,14 @@ class TreeBuilder
 						}
 						else
 						{
-							processToken( END_TAG("tr", false, new Map()) );
-							processToken( t );
+							doProcessToken( END_TAG("tr", false, new Map()) );
+							doProcessToken( t );
 						}
 					case END_TAG(tg, _, _) if (tg == "body" || tg == "caption" || tg == "col" || tg == "colgroup" || tg == "html" || tg == "td" || tg == "th"):
 						//TODO parse error
 						return IGNORED;
 					case _:
-						processToken( t, IN_TABLE );
+						doProcessToken( t, IN_TABLE );
 				}
 			case IN_CELL:
 				switch (t)
@@ -1658,7 +1661,7 @@ class TreeBuilder
 					case START_TAG("caption",_,_)|START_TAG("col",_,_)|START_TAG("colgroup",_,_)|START_TAG("tbody",_,_)|START_TAG("td",_,_)|START_TAG("tfoot",_,_)|START_TAG("th",_,_)|START_TAG("thead",_,_)|START_TAG("tr",_,_):
 						//TODO If the stack of open elements does not have a td or th element in table scope, then this is a parse error; ignore the token. (fragment case)
 						closeCell();
-						processToken( t );
+						doProcessToken( t );
 					case END_TAG("body",_,_)|END_TAG("caption",_,_)|END_TAG("col",_,_)|END_TAG("colgroup",_,_)|END_TAG("html",_,_):
 						//TODO parse error
 						return IGNORED;
@@ -1671,10 +1674,10 @@ class TreeBuilder
 						else
 						{
 							closeCell();
-							processToken( t );
+							doProcessToken( t );
 						}
 					case _:
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 				}
 			case IN_SELECT:
 				switch (t)
@@ -1690,27 +1693,27 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case START_TAG( "option", _, _ ):
 						if ( currentNode().nodeName.toLowerCase() == "caption" )
 						{
-							processToken( END_TAG( "caption", false, new Map() ) );
+							doProcessToken( END_TAG( "caption", false, new Map() ) );
 						}
 						insertHTMLElement( t );
 					case START_TAG( "optgroup", _, _ ):
 						if ( currentNode().nodeName.toLowerCase() == "option" )
 						{
-							processToken( END_TAG( "option", false, new Map() ) );
+							doProcessToken( END_TAG( "option", false, new Map() ) );
 						}
 						if ( currentNode().nodeName.toLowerCase() == "optgroup" )
 						{
-							processToken( END_TAG( "optgroup", false, new Map() ) );
+							doProcessToken( END_TAG( "optgroup", false, new Map() ) );
 						}
 						insertHTMLElement( t );
 					case END_TAG( "optgroup", _, _ ):
 						if ( currentNode().nodeName.toLowerCase() == "option" && stack[stack.length-2].nodeName.toLowerCase() == "optgroup" )
 						{
-							processToken( END_TAG( "option", false, new Map() ) );
+							doProcessToken( END_TAG( "option", false, new Map() ) );
 						}
 						if ( currentNode().nodeName.toLowerCase() == "optgroup" )
 						{
@@ -1743,15 +1746,15 @@ class TreeBuilder
 						//}
 					case START_TAG("select", sc, attrs):
 						//TODO parse error
-						processToken( END_TAG( "select", sc, attrs ) );
+						doProcessToken( END_TAG( "select", sc, attrs ) );
 					case START_TAG("input", _, _) | START_TAG("keygen", _, _) | START_TAG("textarea", _, _):
 						//TODO parse error
 						//TODO If the stack of open elements does not have a select element in select scope, ignore the token. (fragment case)
 						//else
-						processToken( END_TAG( "select", false, new Map() ) );
-						processToken( t );
+						doProcessToken( END_TAG( "select", false, new Map() ) );
+						doProcessToken( t );
 					case START_TAG( "script", _, _ ):
-						processToken( t, IN_HEAD );
+						doProcessToken( t, IN_HEAD );
 					case EOF:
 						if ( currentNode() != stack [0] ) //If the current node is not the root html element,
 						{
@@ -1766,33 +1769,33 @@ class TreeBuilder
 				{
 					case START_TAG("caption",_,_)|START_TAG("table",_,_)|START_TAG("tbody",_,_)|START_TAG("tfoot",_,_)|START_TAG("thead",_,_)|START_TAG("tr",_,_)|START_TAG("td",_,_)|START_TAG("th",_,_):
 						//TODO parse error
-						processToken( END_TAG( "select", false, new Map() ) );
-						processToken( t );
+						doProcessToken( END_TAG( "select", false, new Map() ) );
+						doProcessToken( t );
 					case END_TAG(tg,_,_) if(tg=="caption" || tg=="table" || tg=="tbody" || tg=="tfoot" || tg=="thead" || tg=="tr" || tg=="td" || tg=="th"):
 						//TODO parse error
 						if (isEltInTableScope([tg]))
 						{
-							processToken( END_TAG( "select", false, new Map() ) );
+							doProcessToken( END_TAG( "select", false, new Map() ) );
 						}
 						else
 						{
 							return IGNORED;
 						}
 					case _:
-						processToken( t, IN_SELECT );
+						doProcessToken( t, IN_SELECT );
 				}
 			case AFTER_BODY:
 				switch (t)
 				{
 					case CHAR( 0x9 ) | CHAR( 0xA ) | CHAR( 0xC ) | CHAR( 0xD ) | CHAR( 0x20 ) :
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case COMMENT( d ):
 						stack[0].appendChild( doc.createComment(d) );
 					case DOCTYPE( _, _, _, _ ):
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case END_TAG("html",_,_):
 						//TODO If the parser was originally created as part of the HTML fragment parsing algorithm, this is a parse error; ignore the token. (fragment case)
 						//else
@@ -1804,7 +1807,7 @@ class TreeBuilder
 					case _:
 						//TODO parse error
 						im = IN_BODY;
-						processToken(t);
+						doProcessToken(t);
 				}
 			case IN_FRAMESET:
 				switch (t)
@@ -1817,7 +1820,7 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case START_TAG( "frameset", _, _ ):
 						insertHTMLElement( t );
 					case END_TAG( "frameset", _, _ ):
@@ -1838,7 +1841,7 @@ class TreeBuilder
 							ack = true;
 						}
 					case START_TAG( "noframes", _, _ ):
-						processToken( t, IN_HEAD );
+						doProcessToken( t, IN_HEAD );
 					case EOF:
 						if (currentNode() != stack[0])
 						{
@@ -1860,11 +1863,11 @@ class TreeBuilder
 						//TODO parse error
 						return IGNORED;
 					case START_TAG( "html", _, _ ):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case END_TAG( "html", _, _ ):
 						im = AFTER_AFTER_FRAMESET;
 					case START_TAG( "noframes", _, _ ):
-						processToken( t, IN_HEAD );
+						doProcessToken( t, IN_HEAD );
 					case EOF:
 						stopParsing();
 					case _:
@@ -1877,13 +1880,13 @@ class TreeBuilder
 					case COMMENT( d ):
 						doc.appendChild( doc.createComment(d) );
 					case DOCTYPE(_,_,_,_)|CHAR(0x9)|CHAR(0xA)|CHAR(0xC)|CHAR(0xD)|CHAR(0x20)|START_TAG("html",_,_):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case EOF:
 						stopParsing();
 					case _:
 						//TODO parse error
 						im = IN_BODY;
-						processToken( t );
+						doProcessToken( t );
 				}
 			case AFTER_AFTER_FRAMESET:
 				switch (t)
@@ -1891,11 +1894,11 @@ class TreeBuilder
 					case COMMENT( d ):
 						doc.appendChild(doc.createComment(d));
 					case DOCTYPE(_,_,_,_)|CHAR(0x9)|CHAR(0xA)|CHAR(0xC)|CHAR(0xD)|CHAR(0x20)|START_TAG("html",_,_):
-						processToken( t, IN_BODY );
+						doProcessToken( t, IN_BODY );
 					case EOF:
 						stopParsing();
 					case START_TAG( "noframes", _, _ ):
-						processToken( t, IN_HEAD );
+						doProcessToken( t, IN_HEAD );
 					case _:
 						//TODO parse error
 						return IGNORED;
@@ -2062,11 +2065,11 @@ class TreeBuilder
 		//nor can it have neither when the close the cell algorithm is invoked.
 		if (isEltInTableScope(["td"]))
 		{
-			processToken( END_TAG( "td", false, new Map() ) );
+			doProcessToken( END_TAG( "td", false, new Map() ) );
 		}
 		else // has a th element in table scope
 		{
-			processToken( END_TAG( "th", false, new Map() ) );
+			doProcessToken( END_TAG( "th", false, new Map() ) );
 		}
 	}
 	/**
@@ -2301,14 +2304,14 @@ class TreeBuilder
 	function parseRawText( t : Token ) : Void
 	{
 		insertHTMLElement( t );
-		tok.switchState( RAWTEXT );
+		onStateChangeRequest( RAWTEXT );
 		om = im;
 		im = TEXT;
 	}
 	function parseRcdata( t : Token ) : Void
 	{
 		insertHTMLElement( t );
-		tok.switchState( RCDATA );
+		onStateChangeRequest( RCDATA );
 		om = im;
 		im = TEXT;
 	}
