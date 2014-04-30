@@ -1,3 +1,11 @@
+/**
+ * Dominos, HTML5 parser.
+ * @see https://github.com/silexlabs/dominos
+ *
+ * @author Thomas Fétiveau, http://www.tokom.fr
+ * Copyrights SilexLabs 2013 - http://www.silexlabs.org/ -
+ * License MIT
+ */
 package dominos.parser;
 
 import dominos.parser.html.InputStream;
@@ -23,7 +31,7 @@ class HTMLParser
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#concept-frag-parse-context
 	 */
-	static public function parseFragment( input : String, ?context : Element = null )
+	static public function parseFragment( input : String, ? context : Element = null )
 	{
 		//TODO
 	}

@@ -1,7 +1,5 @@
--cp ../../../src
--cp ../../src
--neko ../../bin/dom/DOMParserTests.n
+-cp src
+-cp test/src
+-neko test/bin/DOMParserTests.n
 -main dominos.test.dom.DOMParserTests
--D neko2
--D haxe3
 -lib utest

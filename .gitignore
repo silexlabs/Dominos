@@ -1,0 +1,6 @@
+test/bin
+*.js.map
+*.sublime-project
+*.sublime-workspace
+*.DS_Store
+Thumbs.db

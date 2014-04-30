@@ -1,3 +1,11 @@
+/**
+ * Dominos, HTML5 parser.
+ * @see https://github.com/silexlabs/dominos
+ *
+ * @author Thomas Fétiveau, http://www.tokom.fr
+ * Copyrights SilexLabs 2013 - http://www.silexlabs.org/ -
+ * License MIT
+ */
 package dominos.parser.html;
 
 import dominos.dom.Document;
@@ -83,9 +91,6 @@ typedef ActiveFormattingElt =
  */
 class TreeBuilder
 {
-	/**
-	 * CONSTANTS
-	 */
 	/**
 	 * 
 	 */
@@ -177,7 +182,7 @@ class TreeBuilder
 				"-//WebTechs//DTD Mozilla HTML 2.0//",
 				"-//WebTechs//DTD Mozilla HTML//" ];
 	}
-	
+
 	
 	/**
 	 * The insertion mode is a state variable that controls the primary operation of the tree construction stage.

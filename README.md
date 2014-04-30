@@ -1,6 +1,6 @@
 #Dominos, HTML DOM parser
 
-Dominos is a cross-platform HTML DOM manipulation library coded with [Haxe](www.haxe.org). It enables your applications to parse HTML pages or fragments and manipulate the HTML DOM model.
+Dominos is a cross-platform HTML DOM manipulation library coded with [Haxe](www.haxe.org). It enables your applications to parse HTML pages or fragments and manipulate the HTML DOM model and reserialize you in memory DOM tree.
 
 Dominos is a free and open source project [powered by Silex Labs](http://www.silexlabs.org/).
 
@@ -8,7 +8,7 @@ Authored by Thomas Fétiveau [@zab0jad](https://twitter.com/zab0jad)
 
 ##About Dominos
 
-Dominos can be available on any platform supported by the Haxe compiler (actionscript, javascript, c++, php, c#, java, neko, ...) but has however been tested only with actionscript and c++ so far.
+Dominos can be available on any platform supported by the [Haxe](www.haxe.org) compiler (actionscript, javascript, c++, php, c#, java, neko, ...) but has however been tested only with actionscript, neko and c++ so far.
 
 Dominos is Haxe 3 only (not compatible with older versions of Haxe).
 
