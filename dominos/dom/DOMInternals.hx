@@ -45,6 +45,76 @@ class DOMInternals
 	////////////////////////
 	// METHODS
 	////////////////////////
+
+	/**
+	 * @see http://www.w3.org/TR/dom/#concept-node-replace-all
+	 */
+	static public function replaceAll(node : Node, parent : Node) : Void {
+
+		/*
+		If node is not null, adopt node into parent's node document.
+		*/
+		if (node != null) {
+
+			adopt( node, parent.ownerDocument );
+		}
+
+		/*
+		Let removedNodes be parent's children.
+		*/
+		var removedNodes : NodeList = parent.childNodes;
+
+		/*
+		Let addedNodes be the empty list if node is null, node's children if node is a DocumentFragment node, 
+		and a list containing node otherwise.
+		*/
+		var addedNodes : NodeList;
+
+		if (node == null) {
+
+			addedNodes = [];
+			
+		} else if (node.nodeType == Node.DOCUMENT_FRAGMENT_NODE) {
+
+			addedNodes = node.childNodes;
+
+		} else {
+
+			// addedNodes =  ???
+			throw "not implemented";
+		}
+
+		/*
+		Remove all parent's children, with the suppress observers flag set.
+		*/
+		// FIXME suppress observers flag
+		for (c in removedNodes) {
+
+			remove(c, parent);
+		}
+
+		/*
+		If node is not null, insert node into parent before null with the suppress observers flag set.
+		*/
+		// if (node != null) { FIXME I disagree
+
+		//	insert(node, parent, null);
+		for (n in addedNodes) {
+
+			insert(n, parent, null);
+		}
+
+		/*
+		Queue a mutation record of "childList" for parent with addedNodes addedNodes and removedNodes removedNodes.
+		*/
+		// TODO
+
+		/*
+		Run node is removed for each node in removedNodes, in tree order, and then run node is inserted for each node 
+		in addedNodes, in tree order.
+		*/
+		// TODO
+	}
 	
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-cd-replace

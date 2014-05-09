@@ -108,7 +108,7 @@ class Node extends EventTarget
 	/**
 	 * 
 	 */
-	private function new()
+	public function new()
 	{
 		//init childNodes list
 		childNodes = [];
@@ -223,8 +223,8 @@ class Node extends EventTarget
 		return ownerDocument;
 	}
 	public function get_parentElement() : Null<Element>
-	{
-		return ( parentNode.nodeType != Node.ELEMENT_NODE ) ? null : cast parentNode;
+	{ trace(nodeName+" parentNode= "+parentNode);
+		return ( parentNode != null && parentNode.nodeType != Node.ELEMENT_NODE ) ? null : cast parentNode;
 	}
 	public function get_firstChild() : Null<Node>
 	{

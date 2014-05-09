@@ -6,7 +6,8 @@
  * Copyrights SilexLabs 2013 - http://www.silexlabs.org/ -
  * License MIT
  */
-package dominos.dom; 
+package dominos.dom;
+
 import dominos.html.HTMLCollection;
 
 /**
@@ -65,6 +66,17 @@ class Element extends Node
 	//TODO readonly attribute Element? previousElementSibling;
 	//TODO readonly attribute Element? nextElementSibling;
 	//TODO readonly attribute unsigned long childElementCount;
+
+	/*
+	[TreatNullAs=EmptyString]
+                attribute DOMString innerHTML;
+    */
+    public var innerHTML (get, set) : String;
+
+    /*
+    [TreatNullAs=EmptyString]
+                attribute DOMString outerHTML;
+    */
 	
 	@:allow(dominos.dom.Document.createElement)
 	private function new( localName : String, ?namespaceURI : Null<DOMString> = null, ?prefix : Null<DOMString> = null )
@@ -179,6 +191,24 @@ class Element extends Node
 	//////////////////////////
 	// PROPERTIES
 	//////////////////////////
+
+	public function get_innerHTML() : String {
+
+		return dominos.parser.HTMLSerializer.serialize(this);
+	}
+
+	public function set_innerHTML(markup : String) : String {
+
+		var fe : DocumentFragment = new DocumentFragment();
+
+		for (c in dominos.parser.HTMLParser.parseFragment(markup, this)) {
+
+			fe.appendChild(c);
+		}
+		DOMInternals.replaceAll(fe, this);
+
+		return markup;
+	}
 	
 	public function get_tagName() : DOMString
 	{

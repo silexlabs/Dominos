@@ -60,7 +60,7 @@ class Document extends Node
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-documentelement
 	 */
-	public var documentElement( default, null ) : Element;
+	public var documentElement( get, null ) : Element;
 	
 	//TODO When the value is set, the user agent must fire a simple event named readystatechange at the Document object.
 	//@see http://www.whatwg.org/specs/web-apps/current-work/multipage/dom.html#dom-document-readystate
@@ -100,9 +100,9 @@ class Document extends Node
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementbyid
 	 */
-	public function getElementById( elementId : DOMString ) : Null<Element>
+	public function getElementById(elementId : DOMString) : Null<Element>
 	{
-		throw "Not implemented!"; return null;
+		return doGetElementById(documentElement, elementId);
 	}
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-createelement
@@ -204,6 +204,22 @@ class Document extends Node
 	//////////////////////////////////
 	// PROPERTIES
 	//////////////////////////////////
+
+	public function get_documentElement() : Element {
+
+		for (c in childNodes) {
+
+			switch(c.nodeType) {
+
+				case Node.ELEMENT_NODE:
+
+					return cast c;
+
+				default: // nothing
+			}
+		}
+		return null; // that's bad !
+	}
 	
 	override public function get_nodeType() : Int
 	{
@@ -215,6 +231,50 @@ class Document extends Node
 	}
 	override public function get_ownerDocument() : Null<Document>
 	{
+		return null;
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// PRIVATE METHODS
+	//////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Actually return the Element matching the
+	 * elementId, by traversing recursively the 
+	 * DOM tree
+	 */
+	private function doGetElementById(node:Element, elementId:String):Element
+	{
+trace("doGetElementById node = "+node.tagName);
+		//ID can only be matched by element node or descendant of element node
+		if (node.nodeType == Node.ELEMENT_NODE)
+		{
+trace("node.getAttribute('id')= "+node.getAttribute("id")+"     elementId= "+elementId);
+			// check ID attribute, returns null if no ID attribute for this node
+			if (node.getAttribute("id") == elementId)
+			{
+				return node;
+			}
+
+			if (node.hasChildNodes() == true)
+			{
+				var length:Int = node.childNodes.length;
+				for (i in 0...length)
+				{
+					if (node.childNodes[i].nodeType == Node.ELEMENT_NODE)
+					{
+						var matchingElement:Element = doGetElementById(cast(node.childNodes[i]), elementId);
+						//if a matching element is found, return it
+						if (matchingElement != null)
+						{
+							return matchingElement;
+						}
+					}
+				}
+			}
+		}
+		
+		//at this point no element with a matching Id was found
 		return null;
 	}
 }

@@ -37,9 +37,9 @@ class CurrentTagHelper
 	}
 	public function nextAttr( s : String ):Void
 	{
-		if ( can != null)
+		if (can != null)
 		{
-			attrs.set( can, cav );
+			attrs.set(can, cav);
 		}
 		can = s;
 		cav = "";
@@ -69,7 +69,11 @@ class CurrentTagHelper
 		sc = true;
 	}
 	public function generateToken():Token
-	{ //trace("generate "+(e?"end":"start")+" token: "+n);
+	{
+		if (can != null)
+		{
+			attrs.set(can, cav);
+		}
 		if (e)
 		{
 			return END_TAG( n, sc, attrs );

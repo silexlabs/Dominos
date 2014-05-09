@@ -6,7 +6,7 @@
  * Copyrights SilexLabs 2013 - http://www.silexlabs.org/ -
  * License MIT
  */
-package dominos.html;
+package dominos.parser;
 
 import dominos.dom.Comment;
 import dominos.dom.Node;
@@ -29,7 +29,7 @@ class HTMLSerializer
 		var s : StringBuf = new StringBuf();
 
 		for ( currentNode in node.childNodes )
-		{
+		{ trace("currentNode= "+currentNode.nodeName+"  type= "+currentNode.nodeType);
 			if ( currentNode.nodeType == Node.ELEMENT_NODE )
 			{
 				var ce : Element = cast currentNode;

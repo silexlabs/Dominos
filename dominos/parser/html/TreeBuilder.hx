@@ -207,7 +207,14 @@ class TreeBuilder
 	 * 
 	 * @see http://www.w3.org/TR/html5/syntax.html#the-stack-of-open-elements
 	 */
-	private var stack : Array<Element>;
+	public var stack : Array<Element>;
+
+	/**
+	 * The stack of template insertion modes
+	 * 
+	 * @see http://www.w3.org/TR/html5/syntax.html#stack-of-template-insertion-modes
+	 */
+	public var stim : Array<InsertionMode>;
 	
 	/**
 	 * The list of active formatting elements
@@ -230,7 +237,7 @@ class TreeBuilder
 	 * 
 	 * @see http://www.w3.org/TR/html5/syntax.html#the-element-pointers
 	 */
-	private var fp : Element;
+	public var fp : Element;
 
 	/**
 	 * The scripting flag is set to "enabled" if scripting was enabled for the Document 
@@ -279,6 +286,8 @@ class TreeBuilder
 		//this.is = is;
 		// init stack of open elts
 		stack = [];
+		// init stack of template insertion modes (not managed yet)
+		stim = [];
 		// init list of active formatting elts to empty array
 		lafe = [];
 		// init insertion mode
@@ -1975,18 +1984,19 @@ class TreeBuilder
 	/**
 	 * @see http://www.w3.org/TR/html5/syntax.html#reset-the-insertion-mode-appropriately
 	 */
-	function resetInsertionMode() : Void
+	public function resetInsertionMode(? context : Element) : Void
 	{
 		var l = false;
 		var n = currentNode();
 		do
 		{
-			// TODO If node is the first node in the stack of open elements, then set last to true and set node to the context element. (fragment case)
-			//if (n == stack[0])
-			//{
-				//l = true;
-				//
-			//}
+			// If node is the first node in the stack of open elements, then set last to true and set node to the context element. (fragment case)
+			if (n == stack[0])
+			{
+				l = true;
+				
+				n = context;
+			}
 			// TODO If node is a select element, then switch the insertion mode to "in select" and abort these steps. (fragment case)
 			//if ()
 			//{
@@ -2042,18 +2052,21 @@ class TreeBuilder
 			//{
 				//
 			//}
-			// TODO If node is an html element, then switch the insertion mode to "before head" Then, abort these steps. (fragment case)
-			//if ()
-			//{
-				//
-			//}
-			// TODO If last is true, then switch the insertion mode to "in body" and abort these steps. (fragment case)
-			//if ()
-			//{
-				//
-			//}
+			// If node is an html element, then switch the insertion mode to "before head" Then, abort these steps. (fragment case)
+			if (n.nodeName.toLowerCase() == "html")
+			{
+				im = BEFORE_HEAD;
+				return;
+			}
+			// If last is true, then switch the insertion mode to "in body" and abort these steps. (fragment case)
+			if (l)
+			{
+				im = IN_BODY;
+				return;
+			}
 			//Let node now be the node before node in the stack of open elements.
 			n = stack[ Lambda.indexOf( stack, cast n ) - 1 ];
+
 		} while (true);
 	}
 	/**
@@ -2285,7 +2298,7 @@ class TreeBuilder
 	{
 		switch (t)
 		{
-			case START_TAG( tagName, _, attrs):
+			case START_TAG( tagName, _, attrs): trace("START_TAG "+tagName+" "+attrs);
 				var e = doc.createElement(tagName);
 				for ( att in attrs.keys() )
 				{
