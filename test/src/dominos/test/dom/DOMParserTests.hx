@@ -34,12 +34,18 @@ class DOMParserTests
 		var doc : Document = dp.parseFromString(docStr, DOMParser.TEXT_HTML_TYPE);
 		trace(HTMLSerializer.serialize(doc));
 		Assert.notNull( doc );
-		dumpNode(doc);
+		//dumpNode(doc);
 
 		var ip : Element = doc.getElementById("ih");
 		ip.innerHTML = "<span>Dominos is</span> <i>SO</i> <b>COOL</b>!";
 
-		dumpNode(doc);
+		//dumpNode(doc);
+		trace(HTMLSerializer.serialize(doc));
+
+		trace("ip outerHTML is:");
+		trace(ip.outerHTML);
+		ip.outerHTML = "<div><p>Very</p> <span>Cool!</span></div>";
+		//dumpNode(doc);
 		trace(HTMLSerializer.serialize(doc));
 	}
 /*

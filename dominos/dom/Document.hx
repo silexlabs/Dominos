@@ -245,11 +245,9 @@ class Document extends Node
 	 */
 	private function doGetElementById(node:Element, elementId:String):Element
 	{
-trace("doGetElementById node = "+node.tagName);
 		//ID can only be matched by element node or descendant of element node
 		if (node.nodeType == Node.ELEMENT_NODE)
 		{
-trace("node.getAttribute('id')= "+node.getAttribute("id")+"     elementId= "+elementId);
 			// check ID attribute, returns null if no ID attribute for this node
 			if (node.getAttribute("id") == elementId)
 			{

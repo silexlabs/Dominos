@@ -67,11 +67,12 @@ class Node extends EventTarget
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-ownerdocument
 	 */
-	public var ownerDocument( get, null ) : Null<Document>;
+	 @:isVar
+	public var ownerDocument( get, set ) : Null<Document>;
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-parentnode
 	 */
-	public var parentNode( default, null ) : Null<Node>;
+	public var parentNode( default, default ) : Null<Node>;
 	/**
 	 * @see https://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#parent-element
 	 */
@@ -222,8 +223,14 @@ class Node extends EventTarget
 	{
 		return ownerDocument;
 	}
+	public function set_ownerDocument(v : Null<Document>) : Null<Document>
+	{
+		ownerDocument = v;
+
+		return ownerDocument;
+	}
 	public function get_parentElement() : Null<Element>
-	{ trace(nodeName+" parentNode= "+parentNode);
+	{
 		return ( parentNode != null && parentNode.nodeType != Node.ELEMENT_NODE ) ? null : cast parentNode;
 	}
 	public function get_firstChild() : Null<Node>

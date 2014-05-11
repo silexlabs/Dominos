@@ -77,9 +77,9 @@ class Element extends Node
     [TreatNullAs=EmptyString]
                 attribute DOMString outerHTML;
     */
+    public var outerHTML (get, set) : String;
 	
-	@:allow(dominos.dom.Document.createElement)
-	private function new( localName : String, ?namespaceURI : Null<DOMString> = null, ?prefix : Null<DOMString> = null )
+	public function new( localName : String, ?namespaceURI : Null<DOMString> = null, ?prefix : Null<DOMString> = null )
 	{
 		super();
 		this.attributes = [];
@@ -199,13 +199,52 @@ class Element extends Node
 
 	public function set_innerHTML(markup : String) : String {
 
-		var fe : DocumentFragment = new DocumentFragment();
+		var fe : DocumentFragment = dominos.parser.DOMParser.parseFragment(markup, this);
 
-		for (c in dominos.parser.HTMLParser.parseFragment(markup, this)) {
-
-			fe.appendChild(c);
-		}
 		DOMInternals.replaceAll(fe, this);
+
+		return markup;
+	}
+
+	public function get_outerHTML() : String {
+
+		var fictionalNode : Node = new Node();
+
+		fictionalNode.childNodes = [this];
+
+		return dominos.parser.HTMLSerializer.serialize(fictionalNode);
+	}
+
+	public function set_outerHTML(markup : String) : String {
+
+		// Let parent be the context object's parent.
+		var parent : Node = parentNode;
+
+		// If parent is null, terminate these steps. There would be no way to obtain a reference 
+		// to the nodes created even if the remaining steps were run.
+		if (parent == null) {
+			trace("Aborting set_outerHTML as parent is null");
+			return null;
+		}
+
+		// If parent is a Document, throw a NoModificationAllowedError exception and terminate these steps.
+		if (parent.nodeType == Node.DOCUMENT_NODE) {
+
+			throw "NoModificationAllowedError";
+		}
+
+		// If parent is a DocumentFragment, let parent be a new Element with
+		if (parent.nodeType == Node.DOCUMENT_FRAGMENT_NODE) {
+
+			parent = new Element(DOMInternals.HTML_BODY_ELEMENT_TAGNAME, DOMInternals.HTML_NAMESPACE);
+			DOMInternals.adopt(parent, ownerDocument);
+		}
+		// Let fragment be the result of invoking the fragment parsing algorithm with the new value as 
+		// markup, and parent as the context element.
+		var fragment : DocumentFragment = dominos.parser.DOMParser.parseFragment(markup, cast parent);
+
+		// Replace the context object with fragment within the context object's parent.
+		DOMInternals.replace(this, fragment, parent);
 
 		return markup;
 	}

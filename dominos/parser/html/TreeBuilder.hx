@@ -2298,7 +2298,7 @@ class TreeBuilder
 	{
 		switch (t)
 		{
-			case START_TAG( tagName, _, attrs): trace("START_TAG "+tagName+" "+attrs);
+			case START_TAG( tagName, _, attrs):
 				var e = doc.createElement(tagName);
 				for ( att in attrs.keys() )
 				{

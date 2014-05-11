@@ -29,7 +29,7 @@ class HTMLSerializer
 		var s : StringBuf = new StringBuf();
 
 		for ( currentNode in node.childNodes )
-		{ trace("currentNode= "+currentNode.nodeName+"  type= "+currentNode.nodeType);
+		{
 			if ( currentNode.nodeType == Node.ELEMENT_NODE )
 			{
 				var ce : Element = cast currentNode;
